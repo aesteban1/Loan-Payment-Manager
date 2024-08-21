@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Payment Optimizer</title>
+  <!-- <script defer src="Script.js"></script> -->
+  <script defer src="UI.js"></script>
+  <link rel="stylesheet" href="Styles.css">
+</head>
+<body>
+  <h1>Loan Payment Manager</h1>
+  <div class="container">
+    <fieldset id="loans">
+      <legend>Loans</legend>
+      <div class="loan-container">
+        <button id="add-entry">+</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="container">
+    <form id="dateForm">
+      <label for="paymentDate">Select Payment Date:</label>
+      <input type="date" id="paymentDate" required>
+      <button type="submit" id="update-loans">Update Loans</button>
+    </form>
+
+    <div id="loanInfo">
+      <!-- This is where the loan information will be displayed -->
+    </div>
+
+    <div id="remainingBudget">
+      <!-- Display remaining budget here -->
+    </div>
+  </div>
+</body>
+</html>
