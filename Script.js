@@ -14,7 +14,7 @@ const daily_accrual = (rate, balance)=>{
 
 let budget = 400
 
-function calcualte_payments(loans, budget){
+function calculate_payments(loans, budget){
   for(let loan of loans){
     budget-=loan["min_payment"];
     if(budget < 0){
@@ -76,4 +76,4 @@ function calcualte_payments(loans, budget){
   console.log(`Remaining Budget: ${budget.toFixed(2)}`)
 }
 
-calcualte_payments(loans, budget)
+calculate_payments(loans, budget)

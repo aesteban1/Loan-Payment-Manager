@@ -7,7 +7,7 @@ body {
 } 
 
 .container {
-  max-width: 600px;
+  max-width: 850px;
   height: fit-content;
   margin: 0 auto;
   background-color: #222222;
@@ -17,8 +17,9 @@ body {
 }
 
 #add-entry{
-  height: 193px;
-  width: 174px;
+  height: 250px;
+  width: 250px;
+  box-sizing: border-box;
   border-radius: 10px;
   background-color: #484848;
   border: none;
@@ -42,43 +43,46 @@ body {
 }
 
 .loan{
-  display:flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  position: relative;
   box-sizing: border-box;
   border-radius: 10px;
-  padding: 10px;
+  padding: 30px 20px;
   background-color: #484848;
   margin: 10px;
-  height: 193px;
-  width: 174px;
+  height: 250px;
+  width: 240px;
 }
 
-.loan p,
+
+.loan label,
 .loan span{
-  margin: 0;
-  padding: 0;
-  color:#e9e9e9;
-  font-size: 1rem;
-  height: 1rem;
+  font-size: 14px;
+  text-shadow: 1px 1px #000000;
 }
 
 .loan p{
+  padding: 0;
+  color:#e9e9e9;
+  font-size: 1.2rem;
+  height: 1rem;
   width: 15ch;
+  margin: 5px 0px;
 }
 
 .loan-input{
   height: 1.5rem;
-  width: 150px;
+  width: 18ch;
+  border-radius: 5px;
   font-size: 1.2rem;
   border: none;
+  margin-bottom: 5px;
 }
 
 .confirm-btn{
-  margin:0 auto;
-  margin-top: 10px;
   height: 2rem;
-  width:125px;
+  width:110px;
+  padding: 0;
+  margin-top:10px;
   cursor: pointer;
   color: #332c3d;
   font-weight: bolder;
@@ -87,9 +91,63 @@ body {
   border-radius: 5px;
   transition: all ease-in-out 0.1s;
 }
+
 .confirm-btn:hover{
   background-color: #825daf;
   color: #e9e9e9;
+}
+
+.cancel-btn{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  height: 20px;
+  width: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: transparent;
+  color: #121212;
+}
+
+.cancel-btn:hover{
+  fill: #ff0000;
+  color: #e9e9e9;
+}
+
+
+.dropdown{
+  position: relative;
+  width: fit-content;
+  top:0;
+}
+.dropdown button{
+  width: 100px;
+  border: none;
+  background-color: gray;
+  font-size: 1.5rem;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown-content{
+  list-style: none;
+  display: none;
+  margin: 0;
+  position: absolute;
+  right:0;
+}
+
+.dropdown-content *{
+  width: 100px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.show{
+  display: block;
 }
 
 .group-btn{
@@ -102,13 +160,6 @@ body {
   margin: 10px auto 0 auto;
   cursor: pointer;
   background-color: transparent;
-}
-.delete-btn:hover{
-  fill:red;
-}
-
-.edit-btn:hover{
-  fill:#3a8eb8;
 }
 
 h1 {
