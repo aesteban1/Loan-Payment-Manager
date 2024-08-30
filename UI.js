@@ -12,6 +12,11 @@ function confirmLoan(buttonEl){
   const rate = document.getElementById(`rate-${target}`).value;
   const dataArrIndex = loanData.findIndex((item)=>item.id === target)
 
+  let El = document.getElementById('add-entry')
+  El.disabled = false;
+  El.style.cursor= "pointer"
+
+
   const dataObj = {
     id:target,
     loanName: loanName || target.split('-')[1],
@@ -26,8 +31,25 @@ function confirmLoan(buttonEl){
   }
 
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
-  updateLoanContainer()
-  addEntryButton.disabled = false;
+
+  let container = document.getElementById(target)
+  container.outerHTML = `
+      <div class="loan" id="${dataObj.id}">
+        <div class="dropdown">
+          <button class="arrow" onclick=dropDown(this)></button>
+          <ul class="dropdown-content">
+            <li><button class="edit-btn menu-item" onclick="editEntry(this)">Edit</button></li>
+            <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
+          </ul>
+        </div>
+        <span><strong>Loan Name:</strong></span>
+        <p>${dataObj.loanName}</p>
+        <span><strong>Balance:</strong></span>
+        <p>$${dataObj.balance}</p>
+        <span><strong>Interest Rate: </strong></span>
+        <p>${dataObj.rate}%</p>
+        <button><span></span> Last payment</button>
+      </div>`
 }
 
 function updateLoanContainer(){
@@ -39,10 +61,10 @@ function updateLoanContainer(){
       loanContainer.innerHTML += `
       <div class="loan" id="${id}">
         <div class="dropdown">
-          <button onclick="toggleDropdown(this)">...</button>
-          <ul class="dropdown-content hide">
-            <li><button onclick="editEntry(this)">Edit</button></li>
-            <li><button onclick="deleteEntry(this)">Delete</button></li>
+          <button class="arrow" onclick=dropDown(this)></button>
+          <ul class="dropdown-content">
+            <li><button class="edit-btn menu-item" onclick="editEntry(this)">Edit</button></li>
+            <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
           </ul>
         </div>
         <span><strong>Loan Name:</strong></span>
@@ -51,6 +73,7 @@ function updateLoanContainer(){
         <p>$${balance}</p>
         <span><strong>Interest Rate: </strong></span>
         <p>${rate}%</p>
+        <button class="last-payment"><span class="plus"></span> Last payment</button>
       </div>`
     });
   loanContainer.innerHTML+=`<button id="add-entry" onclick="addEntry()" >+</button>`
@@ -63,13 +86,15 @@ function addEntry(){
   const HTMLString = 
   `<div class="loan" id="group-${number}">
     <button class="cancel-btn" onclick="cancelEntry(this)">
-      <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" height="22px"  width="22px" viewBox="1 1 22 22"><path d="m12.002 2.005c5.518 0 9.998 4.48 9.998 9.997 0 5.518-4.48 9.998-9.998 9.998-5.517 0-9.997-4.48-9.997-9.998 0-5.517 4.48-9.997 9.997-9.997zm0 8.933-2.721-2.722c-.146-.146-.339-.219-.531-.219-.404 0-.75.324-.75.749 0 .193.073.384.219.531l2.722 2.722-2.728 2.728c-.147.147-.22.34-.22.531 0 .427.35.75.751.75.192 0 .384-.073.53-.219l2.728-2.728 2.729 2.728c.146.146.338.219.53.219.401 0 .75-.323.75-.75 0-.191-.073-.384-.22-.531l-2.727-2.728 2.717-2.717c.146-.147.219-.338.219-.531 0-.425-.346-.75-.75-.75-.192 0-.385.073-.531.22z" fill-rule="nonzero"/></svg>
+      <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" height="22px"  width="22px" viewBox="1 1 22 22">
+        <path d="m12.002 2.005c5.518 0 9.998 4.48 9.998 9.997 0 5.518-4.48 9.998-9.998 9.998-5.517 0-9.997-4.48-9.997-9.998 0-5.517 4.48-9.997 9.997-9.997zm0 8.933-2.721-2.722c-.146-.146-.339-.219-.531-.219-.404 0-.75.324-.75.749 0 .193.073.384.219.531l2.722 2.722-2.728 2.728c-.147.147-.22.34-.22.531 0 .427.35.75.751.75.192 0 .384-.073.53-.219l2.728-2.728 2.729 2.728c.146.146.338.219.53.219.401 0 .75-.323.75-.75 0-.191-.073-.384-.22-.531l-2.727-2.728 2.717-2.717c.146-.147.219-.338.219-.531 0-.425-.346-.75-.75-.75-.192 0-.385.073-.531.22z" fill-rule="nonzero"/>
+      </svg>
     </button>
-    <label for="name-group-${number}">Loan Name</label>
+    <label for="name-group-${number}"><strong>Loan Name</strong></label>
     <input type="text" placeholder="Name" id="name-group-${number}" class="loan-input"></input>
-    <label for="balance-group-${number}">Balance</label>
+    <label for="balance-group-${number}"><strong>Balance</strong></label>
     <input type="number" min="1" placeholder="Balance" id="balance-group-${number}" class="loan-input"></input>
-    <label for="rate-group-${number}">Interest Rate</label>
+    <label for="rate-group-${number}"><strong>Interest Rate</strong></label>
     <input type="number" min="0" step="0.1" placeholder="%" id="rate-group-${number}" class="loan-input"></input>
     <button class="confirm-btn" onclick="confirmLoan(this)">CONFIRM</button>
   </div>`
@@ -87,43 +112,40 @@ function cancelEntry(buttonEl){
 }
 
 function deleteEntry(buttonEl){
+  let container = buttonEl.closest('.loan')
   let dataArrIndex = loanData.findIndex((item)=>
-    item.id === buttonEl.parentElement.id
+    item.id === container.id
   );
 
-  buttonEl.parentElement.remove();
+  container.remove();
   loanData.splice(dataArrIndex, 1);
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
 }
 
 function editEntry(buttonEl){
-  let target = buttonEl.parentElement.id;
+  let target = buttonEl.closest('.loan');
   let dataArrIndex = loanData.findIndex((item)=>
-    item.id === target
-  )
-  console.log(loanData)
+    item.id === target.id);
+
   const {id, loanName, balance, rate}=loanData[dataArrIndex]
 
   const HTMLString = 
   `<div class="loan" id="${id}">
-    <label for="name-${id}">Loan Name</label>
+    <label for="name-${id}"><strong>Loan Name</strong></label>
     <input type="text" placeholder="Name" id="name-${id}" class="loan-input" value="${loanName}"></input>
-    <label for="balance-${id}">Balance</label>
+    <label for="balance-${id}"><strong>Balance</strong></label>
     <input type="number" min="1" placeholder="Balance" id="balance-${id}" class="loan-input" value="${balance}"></input>
-    <label for="rate-${id}">Interest Rate</label>
+    <label for="rate-${id}"><strong>Interest Rate</strong></label>
     <input type="number" min="0" step="0.1" placeholder="%" id="rate-${id}" class="loan-input" value="${rate}"></input>
     <button class="confirm-btn" onclick="confirmLoan(this)" >CONFIRM</button>
-    <button class="delete-btn group-btn" onclick="deleteEntry(this)">
-      <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24"><path d="m20.015 6.506h-16v14.423c0 .591.448 1.071 1 1.071h14c.552 0 1-.48 1-1.071 0-3.905 0-14.423 0-14.423zm-5.75 2.494c.414 0 .75.336.75.75v8.5c0 .414-.336.75-.75.75s-.75-.336-.75-.75v-8.5c0-.414.336-.75.75-.75zm-4.5 0c.414 0 .75.336.75.75v8.5c0 .414-.336.75-.75.75s-.75-.336-.75-.75v-8.5c0-.414.336-.75.75-.75zm-.75-5v-1c0-.535.474-1 1-1h4c.526 0 1 .465 1 1v1h5.254c.412 0 .746.335.746.747s-.334.747-.746.747h-16.507c-.413 0-.747-.335-.747-.747s.334-.747.747-.747zm4.5 0v-.5h-3v.5z" fill-rule="nonzero"/></svg>
-    </button>
   </div>`
 
-  document.getElementById(target).outerHTML =  HTMLString
+  document.getElementById(target.id).outerHTML =  HTMLString
 }
 
-function toggleDropdown(buttonEl){
+function dropDown(buttonEl){
   let content = buttonEl.nextElementSibling
-  content.classList.toggle("show")
+  buttonEl.classList.toggle("active")
 }
 
 window.addEventListener('load', (e)=>{
