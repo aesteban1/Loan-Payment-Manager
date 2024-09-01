@@ -48,7 +48,10 @@ function confirmLoan(buttonEl){
         <p>$${dataObj.balance}</p>
         <span><strong>Interest Rate: </strong></span>
         <p>${dataObj.rate}%</p>
-        <button><span></span> Last payment</button>
+        <label for="toggle-${dataObj.id.split("-")[1]}" class="toggle-container">
+          <input type="checkbox" id ="toggle-${dataObj.id.split("-")[1]}">
+          <span class="slider"></span>
+        </label>
       </div>`
 }
 
@@ -73,7 +76,10 @@ function updateLoanContainer(){
         <p>$${balance}</p>
         <span><strong>Interest Rate: </strong></span>
         <p>${rate}%</p>
-        <button class="last-payment"><span class="plus"></span> Last payment</button>
+        <label for="toggle-${id.split("-")[1]}" class="toggle-container">
+          <input type="checkbox" id ="toggle-${id.split("-")[1]}">
+          <span class="slider"></span>
+        </label>
       </div>`
     });
   loanContainer.innerHTML+=`<button id="add-entry" onclick="addEntry()" >+</button>`
@@ -137,7 +143,7 @@ function editEntry(buttonEl){
     <input type="number" min="1" placeholder="Balance" id="balance-${id}" class="loan-input" value="${balance}"></input>
     <label for="rate-${id}"><strong>Interest Rate</strong></label>
     <input type="number" min="0" step="0.1" placeholder="%" id="rate-${id}" class="loan-input" value="${rate}"></input>
-    <button class="confirm-btn" onclick="confirmLoan(this)" >CONFIRM</button>
+    <button class="confirm-btn" onclick="confirmLoan(this)">CONFIRM</button>
   </div>`
 
   document.getElementById(target.id).outerHTML =  HTMLString
