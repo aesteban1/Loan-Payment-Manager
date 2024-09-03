@@ -48,10 +48,14 @@ function confirmLoan(buttonEl){
         <p>$${dataObj.balance}</p>
         <span><strong>Interest Rate: </strong></span>
         <p>${dataObj.rate}%</p>
+        <span class="enterDate"><strong>Separate Date:</strong></span>
         <label for="toggle-${dataObj.id.split("-")[1]}" class="toggle-container">
-          <input type="checkbox" id ="toggle-${dataObj.id.split("-")[1]}">
+          <input type="checkbox" id ="toggle-${dataObj.id.split("-")[1]}" onclick="toggleModal(this)">
           <span class="slider"></span>
         </label>
+        <form id="modal-${dataObj.id.split("-")[1]}" class="separateDate">
+          <input type="date" required>
+        </form>
       </div>`
 }
 
@@ -76,10 +80,14 @@ function updateLoanContainer(){
         <p>$${balance}</p>
         <span><strong>Interest Rate: </strong></span>
         <p>${rate}%</p>
+        <span class="enterDate"><strong>Separate Date:</strong></span>
         <label for="toggle-${id.split("-")[1]}" class="toggle-container">
-          <input type="checkbox" id ="toggle-${id.split("-")[1]}">
+          <input type="checkbox" id ="toggle-${id.split("-")[1]}" onclick="toggleModal(this)">
           <span class="slider"></span>
         </label>
+        <form id="modal-${id.split("-")[1]}" class="separateDate">
+          <input type="date" required>
+        </form>
       </div>`
     });
   loanContainer.innerHTML+=`<button id="add-entry" onclick="addEntry()" >+</button>`
@@ -152,6 +160,16 @@ function editEntry(buttonEl){
 function dropDown(buttonEl){
   let content = buttonEl.nextElementSibling
   buttonEl.classList.toggle("active")
+}
+
+function toggleModal(inputEl){
+  let target = inputEl.id.split("-")[1]
+  let element = `modal-${target}`
+  let targetEl = document.getElementById(element)
+  console.log(targetEl.classList)
+  targetEl.classList.toggle('toggleModal')
+  console.log(targetEl.classList)
+  
 }
 
 window.addEventListener('load', (e)=>{

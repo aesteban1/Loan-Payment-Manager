@@ -6,6 +6,11 @@ body {
   color: #e9e9e9;
 }
 
+h1 {
+  text-align: center;
+  margin: 60px 0;
+}
+
 .container {
   width: 850px;
   height: fit-content;
@@ -116,14 +121,60 @@ body {
   color: #e9e9e9;
 }
 
+.enterDate {
+  display: inline-block;
+}
+
+.separateDate {
+  width: fit-content;
+  height: 30px;
+  scale: 0;
+  border: none;
+  transition: 0.1s linear;
+}
+
+.separateDate:focus,
+input[type=date] {
+  border: solid 1px #bb86fc;
+}
+
+.toggleModal {
+  animation: popout 0.3s cubic-bezier(0.15, 1, 0.83, 1.49);
+  scale: 1;
+}
+
+@keyframes popout {
+  0% {
+    scale: 0;
+  }
+  100% {
+    scale: 1;
+  }
+}
+input[type=date] {
+  width: 140px;
+  height: 1rem;
+  font-size: 1rem;
+  font-weight: 900;
+  background-color: #343434;
+  color: #e9e9e9;
+  padding: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+input[type=date]:focus {
+  border: solid 1px #38b0d5;
+}
+
 .toggle-container {
-  display: block;
+  display: inline-block;
   background-color: white;
   height: 20px;
   width: 35px;
   border-radius: 10px;
   padding: 0;
-  margin: 0;
+  margin: 10px 0;
   position: relative;
   cursor: pointer;
 }
@@ -247,57 +298,6 @@ body {
   margin: 10px auto 0 auto;
   cursor: pointer;
   background-color: transparent;
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-form {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-label {
-  margin-right: 10px;
-}
-
-input[type=date] {
-  padding: 5px;
-  font-size: 16px;
-}
-
-#update-loans {
-  padding: 5px 10px;
-  font-size: 16px;
-  background-color: #bb86fc;
-  color: #e9e9e9;
-  border: none;
-  cursor: pointer;
-  border-radius: 3px;
-}
-
-#update-loans:hover {
-  background-color: #332c3d;
-}
-
-#loanInfo, #remainingBudget {
-  margin-top: 20px;
-  font-size: 18px;
-}
-
-.loan-item {
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #e9ecef;
-  border-radius: 5px;
-}
-
-.loan-item p {
-  margin: 5px 0;
 }
 
 /*# sourceMappingURL=Styles.css.map */
