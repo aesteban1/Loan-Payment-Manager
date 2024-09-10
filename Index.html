@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Loan Payment Optimizer</title>
-  <!-- <script defer src="Script.js"></script> -->
+  <script defer src="Script.js"></script>
   <script defer src="UI.js"></script>
   <link rel="stylesheet" href="Styles.css">
 </head>
 <body>
   <h1>Loan Payment Manager</h1>
 
-  <div class="container">
+  <div class="container" id="loan-table">
     <fieldset id="loans">
       <legend>Loans</legend>
       <div class="loan-container">
@@ -20,20 +20,24 @@
     </fieldset>
   </div>
 
-  <div class="container">
-    <form id="dateForm">
-      <label for="paymentDate">Select Payment Date:</label>
-      <input type="date" id="paymentDate" required>
-      <button type="submit" id="update-loans">Update Loans</button>
+  <div class="container" id="user-details">
+    <form id="budget">
+      <label for="user-budget">Budget: </label>
+      <input type="number" placeholder="$$$" step="1" min="0" required>
     </form>
-
-    <div id="loanInfo">
+    <form id="dateForm">
+      <label for="paymentDate">Select Payment Date: </label>
+      <input type="date" id="paymentDate" required>
+      <button type="submit" id="submit-loans">Subumit Entries</button>
+    </form>
+  </div>
+  
+    <div class="container" id="loanInfo">
       <!-- This is where the loan information will be displayed -->
     </div>
 
-    <div id="remainingBudget">
+    <div class="container" id="remainingBudget">
       <!-- Display remaining budget here -->
     </div>
-  </div>
 </body>
 </html>

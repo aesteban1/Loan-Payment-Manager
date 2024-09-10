@@ -21,7 +21,8 @@ function confirmLoan(buttonEl){
     id:target,
     loanName: loanName || target.split('-')[1],
     balance:balance || 0,
-    rate:rate || 0
+    rate:rate || 0,
+    date: null
   }
 
   if(dataArrIndex === -1){
@@ -86,7 +87,7 @@ function updateLoanContainer(){
           <span class="slider"></span>
         </label>
         <form id="modal-${id.split("-")[1]}" class="separateDate">
-          <input type="date" required>
+          <input type="date"  onchange="updateDateField(this)" required>
         </form>
       </div>`
     });
@@ -166,10 +167,7 @@ function toggleModal(inputEl){
   let target = inputEl.id.split("-")[1]
   let element = `modal-${target}`
   let targetEl = document.getElementById(element)
-  console.log(targetEl.classList)
-  targetEl.classList.toggle('toggleModal')
-  console.log(targetEl.classList)
-  
+  targetEl.classList.toggle('toggleModal')  
 }
 
 window.addEventListener('load', (e)=>{

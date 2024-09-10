@@ -1,12 +1,27 @@
-let loans = [
-  {"balance": 4201.44, "rate": 4.53, "min_payment": 43.84},
-  {"balance": 3494.74, "rate": 4.53, "min_payment": 36.46},
-  {"balance": 3485.45, "rate": 2.75, "min_payment": 33.47},
-  {"balance": 2100.68, "rate": 4.53, "min_payment": 21.92},
-  {"balance": 2033.61, "rate": 2.75, "min_payment": 19.53},
-  {"balance": 1571.48, "rate": 5.5, "min_payment": 29.98},
-  {"balance": 1498.75, "rate": 4.99, "min_payment": 15.97}
-]
+let dateForm = document.getElementById('dateForm');
+// let userBudget = document.getElementById('user-budget').value
+
+let loans = []
+
+const data = JSON.parse(localStorage.getItem('LPMdata')) || []
+
+dateForm.addEventListener('submit', (e)=>{
+  let date = document.getElementById('paymentDate').value
+
+  data.forEach(element=>{
+    if(element.date === null){
+      element.date = date
+    }
+  })
+  e.preventDefault()
+  date.value = ''
+})
+
+function updateDateField(El){
+  let selectedDate = El.value
+  let target = El.parentElement.id.split('-')[1]
+  data.find(element => element.id === `group-${target}`).date = selectedDate
+}
 
 const daily_accrual = (rate, balance)=>{
   return (rate/100)*(1/365)*balance
@@ -75,5 +90,3 @@ function calculate_payments(loans, budget){
   }
   console.log(`Remaining Budget: ${budget.toFixed(2)}`)
 }
-
-calculate_payments(loans, budget)
