@@ -22,7 +22,7 @@ h1 {
 }
 
 #add-entry {
-  height: 250px;
+  height: 290px;
   width: 240px;
   box-sizing: border-box;
   border-radius: 10px;
@@ -51,33 +51,62 @@ h1 {
   position: relative;
   box-sizing: border-box;
   border-radius: 10px;
-  padding: 30px 20px;
+  padding: 25px 20px;
   background-color: #484848;
   margin: 10px;
-  height: 250px;
+  height: 290px;
   width: 240px;
 }
 
-.loan label,
-.loan span {
+.loan > label,
+.loan > span {
   font-size: 1rem;
   text-shadow: 1px 1px #000000;
 }
 
 .loan p {
-  color: #e9e9e9;
-  font-size: 1.2rem;
+  color: #d4b6f9;
+  text-shadow: 2px 3px 4px #121212;
+  font-size: 1.1rem;
+  font-weight: 600;
   height: 1rem;
   width: 15ch;
   margin: 0 0 5px 0;
   padding: 3px 0px;
 }
 
+.tooltip {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 5px;
+  width: 20ch;
+  background-color: #333333;
+  color: #c0c0c0;
+  text-align: center;
+  padding: 2px 2px;
+  bottom: -350%;
+  z-index: 1;
+  left: 80px;
+  transition: all 0.3s;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 10px;
+  border: solid 10px;
+  border-color: transparent transparent #333333 transparent;
+}
+
 .loan-input {
-  height: 1.4rem;
+  height: 1.2rem;
   width: 18ch;
   border-radius: 5px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   border: none;
   margin-bottom: 5px;
   padding: 0px 2px;
@@ -123,6 +152,12 @@ h1 {
 
 .enterDate {
   display: inline-block;
+  position: relative;
+}
+
+.enterDate:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .separateDate {

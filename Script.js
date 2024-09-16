@@ -1,5 +1,5 @@
 let dateForm = document.getElementById('dateForm');
-// let userBudget = document.getElementById('user-budget').value
+// let userBudget 
 
 let loans = []
 
@@ -9,10 +9,16 @@ dateForm.addEventListener('submit', (e)=>{
   let date = document.getElementById('paymentDate').value
 
   data.forEach(element=>{
-    if(element.date === null){
-      element.date = date
+    if(element.daysElapsed === null){
+      element.daysElapsed = date
     }
   })
+
+  let userDate = new Date(date)
+  let today = new Date(Date.now())
+  let elapsedMS = today.getTime()-userDate.getTime()
+  let elapsedTime = Math.round(elapsedMS/(1000*3600*24))-1
+  
   e.preventDefault()
   date.value = ''
 })
@@ -26,10 +32,12 @@ function updateDateField(El){
 const daily_accrual = (rate, balance)=>{
   return (rate/100)*(1/365)*balance
 }
+  
+// let budget = 400
 
-let budget = 400
-
-function calculate_payments(loans, budget){
+function calculate_payments(loans){
+  let budget = document.getElementById('user-budget').value
+  
   for(let loan of loans){
     budget-=loan["min_payment"];
     if(budget < 0){

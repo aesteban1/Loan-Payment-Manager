@@ -5,26 +5,32 @@ let updateLoansBtn = document.getElementById('update-loans')
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {}
 
+
+//Initial confirmation, populates data to local storage for future use
 function confirmLoan(buttonEl){
   const target = buttonEl.parentElement.id;
   const loanName = document.getElementById(`name-${target}`).value;
   const balance = document.getElementById(`balance-${target}`).value;
+  const min_Payment = document.getElementById(`minPayment-${target}`).value;
   const rate = document.getElementById(`rate-${target}`).value;
+
   const dataArrIndex = loanData.findIndex((item)=>item.id === target)
 
   let El = document.getElementById('add-entry')
   El.disabled = false;
   El.style.cursor= "pointer"
 
-
+  //create the data object
   const dataObj = {
     id:target,
     loanName: loanName || target.split('-')[1],
     balance:balance || 0,
     rate:rate || 0,
-    date: null
+    minPayment: min_Payment || 0,
+    daysElapsed: null
   }
 
+  //save the data object
   if(dataArrIndex === -1){
     loanData.push(dataObj)
   }else{
@@ -33,6 +39,7 @@ function confirmLoan(buttonEl){
 
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
 
+  //Initial HTML to populate the container with
   let container = document.getElementById(target)
   container.outerHTML = `
       <div class="loan" id="${dataObj.id}">
@@ -49,7 +56,12 @@ function confirmLoan(buttonEl){
         <p>$${dataObj.balance}</p>
         <span><strong>Interest Rate: </strong></span>
         <p>${dataObj.rate}%</p>
-        <span class="enterDate"><strong>Separate Date:</strong></span>
+        <span><strong>Minimum Payment: </strong></span>
+        <p>$${dataObj.minPayment}</p>
+        <span class="enterDate">
+          <span class ="tooltip">Use a different payment date for this loan</span>
+          <strong>Separate Date:</strong>
+          </span>
         <label for="toggle-${dataObj.id.split("-")[1]}" class="toggle-container">
           <input type="checkbox" id ="toggle-${dataObj.id.split("-")[1]}" onclick="toggleModal(this)">
           <span class="slider"></span>
@@ -59,13 +71,12 @@ function confirmLoan(buttonEl){
         </form>
       </div>`
 }
-
+//Display user input as inline text
 function updateLoanContainer(){
-
   loanContainer.innerHTML="";
 
   loanData.forEach(
-    ({id, loanName, balance, rate}) => {
+    ({id, loanName, balance, rate, minPayment}) => {
       loanContainer.innerHTML += `
       <div class="loan" id="${id}">
         <div class="dropdown">
@@ -81,19 +92,25 @@ function updateLoanContainer(){
         <p>$${balance}</p>
         <span><strong>Interest Rate: </strong></span>
         <p>${rate}%</p>
-        <span class="enterDate"><strong>Separate Date:</strong></span>
+        <span><strong>Minimum Payment: </strong></span>
+        <p>$${minPayment}</p>
+        <span class="enterDate">
+          <span class ="tooltip">Use a different payment date for this loan</span>
+          <strong>Separate Date:</strong>
+        </span>
         <label for="toggle-${id.split("-")[1]}" class="toggle-container">
           <input type="checkbox" id ="toggle-${id.split("-")[1]}" onclick="toggleModal(this)">
           <span class="slider"></span>
         </label>
         <form id="modal-${id.split("-")[1]}" class="separateDate">
-          <input type="date"  onchange="updateDateField(this)" required>
+          <input type="date" onchange="updateDateField(this)" required>
         </form>
       </div>`
     });
   loanContainer.innerHTML+=`<button id="add-entry" onclick="addEntry()" >+</button>`
 }
 
+//Adds new form with input fields
 function addEntry(){
   const addEntryButton = document.getElementById('add-entry');
   let number = Date.now();
@@ -111,6 +128,8 @@ function addEntry(){
     <input type="number" min="1" placeholder="Balance" id="balance-group-${number}" class="loan-input"></input>
     <label for="rate-group-${number}"><strong>Interest Rate</strong></label>
     <input type="number" min="0" step="0.1" placeholder="%" id="rate-group-${number}" class="loan-input"></input>
+    <label for="minPayment"><strong>Min Monthly Payment: </strong></label>
+    <input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-group-${number}" class="loan-input">
     <button class="confirm-btn" onclick="confirmLoan(this)">CONFIRM</button>
   </div>`
 
@@ -119,6 +138,7 @@ function addEntry(){
   addEntryButton.disabled = true;
 }
 
+//cancel entry, deletes added container
 function cancelEntry(buttonEl){
   let target = document.getElementById('add-entry')
   target.disabled = false;
@@ -126,6 +146,7 @@ function cancelEntry(buttonEl){
   buttonEl.parentElement.remove()
 }
 
+//deletes current container
 function deleteEntry(buttonEl){
   let container = buttonEl.closest('.loan')
   let dataArrIndex = loanData.findIndex((item)=>
@@ -137,12 +158,13 @@ function deleteEntry(buttonEl){
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
 }
 
+//populates user input into an input form, ready for resubmition
 function editEntry(buttonEl){
   let target = buttonEl.closest('.loan');
   let dataArrIndex = loanData.findIndex((item)=>
     item.id === target.id);
 
-  const {id, loanName, balance, rate}=loanData[dataArrIndex]
+  const {id, loanName, balance, rate, minPayment}=loanData[dataArrIndex]
 
   const HTMLString = 
   `<div class="loan" id="${id}">
@@ -152,17 +174,21 @@ function editEntry(buttonEl){
     <input type="number" min="1" placeholder="Balance" id="balance-${id}" class="loan-input" value="${balance}"></input>
     <label for="rate-${id}"><strong>Interest Rate</strong></label>
     <input type="number" min="0" step="0.1" placeholder="%" id="rate-${id}" class="loan-input" value="${rate}"></input>
+    <label for="minPayment"><strong>Min Monthly Payment: </strong></label>
+    <input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-${id}" class="loan-input" value="${minPayment}">
     <button class="confirm-btn" onclick="confirmLoan(this)">CONFIRM</button>
   </div>`
 
   document.getElementById(target.id).outerHTML =  HTMLString
 }
 
+//Toggle the dropdown
 function dropDown(buttonEl){
   let content = buttonEl.nextElementSibling
   buttonEl.classList.toggle("active")
 }
 
+//Toggle the separate date calendar input field
 function toggleModal(inputEl){
   let target = inputEl.id.split("-")[1]
   let element = `modal-${target}`
@@ -170,6 +196,7 @@ function toggleModal(inputEl){
   targetEl.classList.toggle('toggleModal')  
 }
 
-window.addEventListener('load', (e)=>{
+//reload all local storage data into the display field
+window.addEventListener('DOMContentLoaded', (e)=>{
   updateLoanContainer()
 })
