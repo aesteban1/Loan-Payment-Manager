@@ -5,8 +5,105 @@ let updateLoansBtn = document.getElementById('update-loans')
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {}
 
+//Adds an item to the GRID
+function addToGrid(El, dataObj){
+  El.outerHTML = `
+  <div class="loan" id="${dataObj.id}">
+    <div class="dropdown">
+      <button class="arrow" onclick=dropDown(this)></button>
+      <ul class="dropdown-content">
+        <li><button class="edit-btn menu-item" onclick="editGridEntry(this)">Edit</button></li>
+        <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
+      </ul>
+    </div>
+    <span><strong>Loan Name:</strong></span>
+    <p>${dataObj.loanName}</p>
+    <span><strong>Balance:</strong></span>
+    <p>$${dataObj.balance}</p>
+    <span><strong>Interest Rate: </strong></span>
+    <p>${dataObj.rate}%</p>
+    <span><strong>Minimum Payment: </strong></span>
+    <p>$${dataObj.minPayment}</p>
+    <span class="enterDate">
+      <span class ="tooltip">Toggle to set a unique payment date</span>
+      <strong>Payment Date:</strong>
+      </span>
+    <label for="toggle-${dataObj.id.split("-")[1]}" class="toggle-container">
+      <input type="checkbox" id ="toggle-${dataObj.id.split("-")[1]}" onclick="toggleModal(this)">
+      <div class="slider"></div>
+    </label>
+    <form id="modal-${dataObj.id.split("-")[1]}" class="separateDate">
+      <input type="date" required>
+    </form>
+  </div>`
+}
 
-//Initial confirmation, populates data to local storage for future use
+//Updates the GRID with the most recent data
+function updateGrid(){
+  loanData.forEach(
+    ({id, loanName, balance, rate, minPayment}) => {
+      loanContainer.innerHTML += `
+      <div class="loan" id="${id}">
+        <div class="dropdown">
+          <button class="arrow" onclick=dropDown(this)></button>
+          <ul class="dropdown-content">
+            <li><button class="edit-btn menu-item" onclick="editGridEntry(this)">Edit</button></li>
+            <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
+          </ul>
+        </div>
+        <span><strong>Loan Name:</strong></span>
+        <p>${loanName}</p>
+        <span><strong>Balance:</strong></span>
+        <p>$${balance}</p>
+        <span><strong>Interest Rate: </strong></span>
+        <p>${rate}%</p>
+        <span><strong>Minimum Payment: </strong></span>
+        <p>$${minPayment}</p>
+        <span class="enterDate">
+          <span class ="tooltip">Toggle to set a unique payment date</span>
+          <strong>Payment Date:</strong>
+        </span>
+        <label for="toggle-${id.split("-")[1]}" class="toggle-container">
+          <input type="checkbox" id ="toggle-${id.split("-")[1]}" onclick="toggleModal(this)">
+          <div class="slider"></div>
+        </label>
+        <form id="modal-${id.split("-")[1]}" class="separateDate">
+          <input type="date" onchange="updateDateField(this)" required>
+        </form>
+      </div>`
+    });
+  loanContainer.innerHTML+=`<button id="add-entry" onclick="addGridEntry()" >+</button>`
+}
+
+//Adds GRID card with input fields
+function addGridEntry(){
+  const addEntryButton = document.getElementById('add-entry');
+  let number = Date.now();
+
+  const HTMLString = 
+  `<div class="loan" id="group-${number}">
+    <button class="cancel-btn" onclick="cancelEntry(this)">
+      <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" height="22px"  width="22px" viewBox="1 1 22 22">
+        <path d="m12.002 2.005c5.518 0 9.998 4.48 9.998 9.997 0 5.518-4.48 9.998-9.998 9.998-5.517 0-9.997-4.48-9.997-9.998 0-5.517 4.48-9.997 9.997-9.997zm0 8.933-2.721-2.722c-.146-.146-.339-.219-.531-.219-.404 0-.75.324-.75.749 0 .193.073.384.219.531l2.722 2.722-2.728 2.728c-.147.147-.22.34-.22.531 0 .427.35.75.751.75.192 0 .384-.073.53-.219l2.728-2.728 2.729 2.728c.146.146.338.219.53.219.401 0 .75-.323.75-.75 0-.191-.073-.384-.22-.531l-2.727-2.728 2.717-2.717c.146-.147.219-.338.219-.531 0-.425-.346-.75-.75-.75-.192 0-.385.073-.531.22z" fill-rule="nonzero"/>
+      </svg>
+    </button>
+    <label for="name-group-${number}"><strong>Loan Name</strong></label>
+    <input type="text" placeholder="Name" id="name-group-${number}" class="loan-input"></input>
+    <label for="balance-group-${number}"><strong>Balance</strong></label>
+    <input type="number" min="1" placeholder="Balance" id="balance-group-${number}" class="loan-input"></input>
+    <label for="rate-group-${number}"><strong>Interest Rate</strong></label>
+    <input type="number" min="0" step="0.1" placeholder="%" id="rate-group-${number}" class="loan-input"></input>
+    <label for="minPayment"><strong>Min Monthly Payment: </strong></label>
+    <input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-group-${number}" class="loan-input">
+    <button class="confirm-btn" onclick="confirmLoan(this)">CONFIRM</button>
+  </div>`
+
+  addEntryButton.insertAdjacentHTML('beforebegin', HTMLString)
+  addEntryButton.style.cursor = "not-allowed"
+  addEntryButton.disabled = true;
+}
+
+//Confirmation, populates data to local storage for future use
 function confirmLoan(buttonEl){
   const target = buttonEl.parentElement.id;
   const loanName = document.getElementById(`name-${target}`).value;
@@ -39,103 +136,16 @@ function confirmLoan(buttonEl){
 
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
 
-  //Initial HTML to populate the container with
   let container = document.getElementById(target)
-  container.outerHTML = `
-      <div class="loan" id="${dataObj.id}">
-        <div class="dropdown">
-          <button class="arrow" onclick=dropDown(this)></button>
-          <ul class="dropdown-content">
-            <li><button class="edit-btn menu-item" onclick="editEntry(this)">Edit</button></li>
-            <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
-          </ul>
-        </div>
-        <span><strong>Loan Name:</strong></span>
-        <p>${dataObj.loanName}</p>
-        <span><strong>Balance:</strong></span>
-        <p>$${dataObj.balance}</p>
-        <span><strong>Interest Rate: </strong></span>
-        <p>${dataObj.rate}%</p>
-        <span><strong>Minimum Payment: </strong></span>
-        <p>$${dataObj.minPayment}</p>
-        <span class="enterDate">
-          <span class ="tooltip">Use a different payment date for this loan</span>
-          <strong>Separate Date:</strong>
-          </span>
-        <label for="toggle-${dataObj.id.split("-")[1]}" class="toggle-container">
-          <input type="checkbox" id ="toggle-${dataObj.id.split("-")[1]}" onclick="toggleModal(this)">
-          <span class="slider"></span>
-        </label>
-        <form id="modal-${dataObj.id.split("-")[1]}" class="separateDate">
-          <input type="date" required>
-        </form>
-      </div>`
+  addToGrid(container, dataObj)
 }
+
+
 //Display user input as inline text
 function updateLoanContainer(){
   loanContainer.innerHTML="";
+  updateGrid();
 
-  loanData.forEach(
-    ({id, loanName, balance, rate, minPayment}) => {
-      loanContainer.innerHTML += `
-      <div class="loan" id="${id}">
-        <div class="dropdown">
-          <button class="arrow" onclick=dropDown(this)></button>
-          <ul class="dropdown-content">
-            <li><button class="edit-btn menu-item" onclick="editEntry(this)">Edit</button></li>
-            <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
-          </ul>
-        </div>
-        <span><strong>Loan Name:</strong></span>
-        <p>${loanName}</p>
-        <span><strong>Balance:</strong></span>
-        <p>$${balance}</p>
-        <span><strong>Interest Rate: </strong></span>
-        <p>${rate}%</p>
-        <span><strong>Minimum Payment: </strong></span>
-        <p>$${minPayment}</p>
-        <span class="enterDate">
-          <span class ="tooltip">Use a different payment date for this loan</span>
-          <strong>Separate Date:</strong>
-        </span>
-        <label for="toggle-${id.split("-")[1]}" class="toggle-container">
-          <input type="checkbox" id ="toggle-${id.split("-")[1]}" onclick="toggleModal(this)">
-          <span class="slider"></span>
-        </label>
-        <form id="modal-${id.split("-")[1]}" class="separateDate">
-          <input type="date" onchange="updateDateField(this)" required>
-        </form>
-      </div>`
-    });
-  loanContainer.innerHTML+=`<button id="add-entry" onclick="addEntry()" >+</button>`
-}
-
-//Adds new form with input fields
-function addEntry(){
-  const addEntryButton = document.getElementById('add-entry');
-  let number = Date.now();
-
-  const HTMLString = 
-  `<div class="loan" id="group-${number}">
-    <button class="cancel-btn" onclick="cancelEntry(this)">
-      <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" height="22px"  width="22px" viewBox="1 1 22 22">
-        <path d="m12.002 2.005c5.518 0 9.998 4.48 9.998 9.997 0 5.518-4.48 9.998-9.998 9.998-5.517 0-9.997-4.48-9.997-9.998 0-5.517 4.48-9.997 9.997-9.997zm0 8.933-2.721-2.722c-.146-.146-.339-.219-.531-.219-.404 0-.75.324-.75.749 0 .193.073.384.219.531l2.722 2.722-2.728 2.728c-.147.147-.22.34-.22.531 0 .427.35.75.751.75.192 0 .384-.073.53-.219l2.728-2.728 2.729 2.728c.146.146.338.219.53.219.401 0 .75-.323.75-.75 0-.191-.073-.384-.22-.531l-2.727-2.728 2.717-2.717c.146-.147.219-.338.219-.531 0-.425-.346-.75-.75-.75-.192 0-.385.073-.531.22z" fill-rule="nonzero"/>
-      </svg>
-    </button>
-    <label for="name-group-${number}"><strong>Loan Name</strong></label>
-    <input type="text" placeholder="Name" id="name-group-${number}" class="loan-input"></input>
-    <label for="balance-group-${number}"><strong>Balance</strong></label>
-    <input type="number" min="1" placeholder="Balance" id="balance-group-${number}" class="loan-input"></input>
-    <label for="rate-group-${number}"><strong>Interest Rate</strong></label>
-    <input type="number" min="0" step="0.1" placeholder="%" id="rate-group-${number}" class="loan-input"></input>
-    <label for="minPayment"><strong>Min Monthly Payment: </strong></label>
-    <input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-group-${number}" class="loan-input">
-    <button class="confirm-btn" onclick="confirmLoan(this)">CONFIRM</button>
-  </div>`
-
-  addEntryButton.insertAdjacentHTML('beforebegin', HTMLString)
-  addEntryButton.style.cursor = "not-allowed"
-  addEntryButton.disabled = true;
 }
 
 //cancel entry, deletes added container
@@ -159,7 +169,7 @@ function deleteEntry(buttonEl){
 }
 
 //populates user input into an input form, ready for resubmition
-function editEntry(buttonEl){
+function editGridEntry(buttonEl){
   let target = buttonEl.closest('.loan');
   let dataArrIndex = loanData.findIndex((item)=>
     item.id === target.id);
@@ -180,6 +190,15 @@ function editEntry(buttonEl){
   </div>`
 
   document.getElementById(target.id).outerHTML =  HTMLString
+}
+
+function listView(){
+  loanContainer.classList.replace('grid', 'list')
+
+}
+
+function gridView(){
+  loanContainer.classList.replace('list', 'grid')
 }
 
 //Toggle the dropdown
