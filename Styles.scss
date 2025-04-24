@@ -21,6 +21,12 @@ h1{
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+#loans{
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
 #view-toggle{
   display: flex;
   position: relative;
@@ -48,18 +54,10 @@ h1{
 }
 
 #add-entry{
-  height: 290px;
-  width: 240px;
-  box-sizing: border-box;
-  border-radius: 10px;
   background-color: #484848;
   border: none;
-  font-size: 1.5rem;
-  padding: 0;
-  margin: 10px;
   color: #e9e9e9;
   cursor: pointer;
-  font-size: 3rem;
   transition: all ease-in-out 0.1s;
 }
 
@@ -91,22 +89,109 @@ h1{
       padding: 0px 2px;
       width: 18ch;
     }
+    .confirm-btn{
+      height: 2rem;
+      width: 24ch;
+      padding: 0;
+      margin-top:10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #bb86fc;
+    }
+    .cancel-btn{
+      position: absolute;
+      width: 20px;
+      top: 8px;
+      right: 8px;
+    }
+  
+    .confirm-btn:hover{
+      background-color: #825daf;
+      color: #e9e9e9;
+    }
+  }
+  #add-entry{
+  height: 290px;
+  width: 240px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  padding: 0;
+  margin: 10px;
+  font-size: 3rem;
   }
 }
 
 .list{
-  display: inline-block;
-  width: 100%;
-  .loan{
-    padding: 10px 0px;
-    height: 100px;
-    // height: 50px;
-    // overflow-y: hidden;
-    // MARK:Design the collapsed list item
-    p{
+  width: 850px;
+  #header{
+    grid-area: header;
+    height: 20px;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 0.2fr;
+    gap: 5px;
+    margin: 0px 5px;
+    div{
       display: inline-block;
       width: max-content;
     }
+  }
+  #loan-List{
+    grid-area: item;
+    margin: 0;
+    padding: 0;
+  }
+  .loan{
+    display: grid;
+    position: relative;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 0.2fr;
+    gap: 5px;
+    height: 100px;
+    padding: 0px 5px;
+    div{
+      height: 50%;
+      align-content: center;
+    }
+    input{
+      line-height: 1.5rem;
+      height: 2rem;
+      width: 100%;
+      border: none;
+      background-color: #333333;
+      color: white;
+      box-sizing: border-box;
+    }
+    input:focus{
+      outline: 1px solid gray;
+    }
+    #util{
+      position: absolute;
+      bottom: 10px;
+      right:45px;
+      width:fit-content;
+      height: 35px;
+      
+      button{
+        width: 80px;
+        height: 100%;
+        padding: 0;
+        border: none;
+        border-radius: 5px;
+        background-color: #a0a0a0;
+      }
+      .confirm-btn:hover{
+        background-color: #38ba7c;
+      }
+      .cancel-btn:hover{
+        background-color: #f34642;
+      }
+    }
+
+  }
+  #add-entry{
+    grid-area: new;
+    width: 100%;
+    height: 50px;
+    margin: 5px 0px;
   }
 }
 
@@ -162,40 +247,29 @@ h1{
 }
 
 .confirm-btn{
-  height: 2rem;
-  width:110px;
-  padding: 0;
-  margin-top:10px;
   cursor: pointer;
-  color: #332c3d;
+  color: #121212;
   font-weight: bolder;
-  background-color: #bb86fc;
-  border: none;
-  border-radius: 5px;
   transition: all ease-in-out 0.1s;
 }
 
-.confirm-btn:hover{
-  background-color: #825daf;
-  color: #e9e9e9;
-}
-
 .cancel-btn{
-  position: absolute;
-  top: 8px;
-  right: 8px;
   height: 20px;
-  width: 20px;
   padding: 0;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   background-color: transparent;
   color: #121212;
+  font-weight: bolder;
 }
 
 .cancel-btn:hover{
   fill: #ff0000;
+  color: #e9e9e9;
+}
+
+.confirm-btn:hover{
   color: #e9e9e9;
 }
 
