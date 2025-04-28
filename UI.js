@@ -2,18 +2,22 @@ let loanContainer = document.querySelector('.loan-container')
 let addEntryButton = document.getElementById('add-entry')
 let updateLoansBtn = document.getElementById('update-loans')
 
+
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {}
 
 //Displays the user input as regular text
 function addToList(El, dataObj){
   El.outerHTML = `
-  <div class="loan" id="${dataObj.id}">
+  <li class="loan" id="group-${dataObj.id}">
     <p>${dataObj.loanName}</p>
-    <p>${dataObj.balance}</p>
-    <p>${dataObj.rate}</p>
-    <p>${dataObj.minPayment}</p>
-  </div>`
+    <p>$${Number.parseFloat(dataObj.balance).toFixed(2)}</p>
+    <p>${Number.parseFloat(dataObj.rate).toFixed(2)}%</p>
+    <p>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</p>
+    <div class="expandDown">
+          <button id="expand-${dataObj.id}" class="arrow" onclick=expandDown(this)></button>
+    </div>
+  </li>`
 }
 
 //Renders loan container as a list view from user data
@@ -31,42 +35,70 @@ function updateList(){
   loanData.forEach(
     ({id, loanName, balance, rate, minPayment}) =>{
       loanList.innerHTML += `
-      <li class="loan" id = '${id}'>
-        <div>${loanName}</div>
-        <div>${balance}</div>
-        <div>${rate}</div>
-        <div>${minPayment}</div>
-        <div></div>
+      <li class="loan" id = 'group-${id}'>
+        <p>${loanName}</p>
+        <p>$${Number.parseFloat(balance).toFixed(2)}</p>
+        <p>${Number.parseFloat(rate).toFixed(2)}%</p>
+        <p>$${Number.parseFloat(minPayment).toFixed(2)}</p>
+        <div class="expandDown">
+          <button id="expand-${id}" class="arrow" onclick=expandDown(this)></button>
+        </div>
       </li>`
     }
   )
-  loanContainer.insertAdjacentHTML("beforeend", '<button id="add-entry" onclick="newListEntry()">+</button>')
+  loanContainer.insertAdjacentHTML("beforeend", '<button id="add-entry" onclick="newListEntry()"><span class="note">Add New Entry</span>+</button>')
 }
 
 //Creates new input fields for a new list item
 function newListEntry(){
-  const loanList = document.getElementById('loan-List')
-  let number = Date.now()
+  let loanList = document.getElementById('loan-List')
+  let identifier = Date.now()
+  let El = document.getElementById('add-entry')
+  El.style.cursor = "not-allowed"
+  El.disabled = true
 
   const HTMLString = `
-  <div class="loan" id="group-${number}">
-    <div><input type="text" placeholder="Name" id="name-group-${number}" class="loan-input"></input></div>
-    <div><input type="number" min="1" placeholder="Balance ($)" id="balance-group-${number}" class="loan-input"></input></div>
-    <div><input type="number" min="0" step="0.1" placeholder="0.00%" id="rate-group-${number}" class="loan-input"></input></div>
-    <div><input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-group-${number}" class="loan-input"></div>
+  <div class="loan expand" id="group-${identifier}">
+    <div><input type="text" placeholder="Name" id="name-group-${identifier}" class="loan-input"></input></div>
+    <div><input type="number" min="1" placeholder="Balance ($)" id="balance-group-${identifier}" class="loan-input"></input></div>
+    <div><input type="number" min="0" step="0.1" placeholder="0.00%" id="rate-group-${identifier}" class="loan-input"></input></div>
+    <div><input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-group-${identifier}" class="loan-input"></div>
     <div id="util">
     <button class="cancel-btn" onclick="cancelEntry(this)">Cancel</button>
-    <button class="confirm-btn" id="${number}" onclick="confirmLoan(this)">Confirm</button>
+    <button class="confirm-btn" id="${identifier}" onclick="confirmLoan(this)">Confirm</button>
     </div>
   </div>`
 
   loanList.insertAdjacentHTML('beforeend', HTMLString)
 }
 
+function editListEntry(identifier){
+  let dataArrIndex = loanData.findIndex((item)=>
+    item.id === identifier);
+
+  const {id, loanName, balance, rate, minPayment}=loanData[dataArrIndex]
+
+  const HTMLString = `
+    <div><input type="text" placeholder="Name" id="name-group-${id}" class="loan-input" value='${loanName}'></input></div>
+    <div><input type="number" min="1" placeholder="Balance ($)" id="balance-group-${id}" class="loan-input" value='${balance}'></input></div>
+    <div><input type="number" min="0" step="0.1" placeholder="0.00%" id="rate-group-${id}" class="loan-input" value='${rate}'></input></div>
+    <div><input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-group-${id}" class="loan-input" value='${minPayment}'></div>
+    <div id="util">
+      <button class="cancel-btn" onclick="deleteEntry(this)">Delete</button>
+      <button class="confirm-btn" id="${id}" onclick="confirmLoan(this)">Confirm</button>
+    </div>`
+
+  addEntryButton.style.cursor = "not-allowed"
+  addEntryButton.disabled = true;
+  let container = document.getElementById(`group-${identifier}`)
+  container.innerHTML = HTMLString
+
+}
+
 //Adds an item to the GRID
-function addToGrid(El, dataObj){
-  El.outerHTML = `
-  <div class="loan" id="${dataObj.id}">
+function addToGrid(container, dataObj){
+  container.outerHTML = `
+  <div class="loan" id="group-${dataObj.id}">
     <div class="dropdown">
       <button class="arrow" onclick=dropDown(this)></button>
       <ul class="dropdown-content">
@@ -77,11 +109,11 @@ function addToGrid(El, dataObj){
     <span><strong>Loan Name:</strong></span>
     <p>${dataObj.loanName}</p>
     <span><strong>Balance:</strong></span>
-    <p>$${dataObj.balance}</p>
+    <p>$${Number.parseFloat(dataObj.balance).toFixed(2)}</p>
     <span><strong>Interest Rate: </strong></span>
-    <p>${dataObj.rate}%</p>
+    <p>${Number.parseFloat(dataObj.rate).toFixed(2)}%</p>
     <span><strong>Minimum Payment: </strong></span>
-    <p>$${dataObj.minPayment}</p>
+    <p>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</p>
     <span class="enterDate">
       <span class ="tooltip">Toggle to set a unique payment date</span>
       <strong>Payment Date:</strong>
@@ -98,10 +130,11 @@ function addToGrid(El, dataObj){
 
 //Updates the GRID with the most recent data
 function updateGrid(){
+  loanContainer.innerHTML=``
   loanData.forEach(
     ({id, loanName, balance, rate, minPayment}) => {
       loanContainer.innerHTML += `
-      <div class="loan" id="${id}">
+      <div class="loan" id="group-${id}">
         <div class="dropdown">
           <button class="arrow" onclick=dropDown(this)></button>
           <ul class="dropdown-content">
@@ -112,11 +145,11 @@ function updateGrid(){
         <span><strong>Loan Name:</strong></span>
         <p>${loanName}</p>
         <span><strong>Balance:</strong></span>
-        <p>$${balance}</p>
+        <p>$${Number.parseFloat(balance).toFixed(2)}</p>
         <span><strong>Interest Rate: </strong></span>
-        <p>${rate}%</p>
+        <p>${Number.parseFloat(rate).toFixed(2)}%</p>
         <span><strong>Minimum Payment: </strong></span>
-        <p>$${minPayment}</p>
+        <p>$${Number.parseFloat(minPayment).toFixed(2)}</p>
         <span class="enterDate">
           <span class ="tooltip">Toggle to set a unique payment date</span>
           <strong>Payment Date:</strong>
@@ -161,14 +194,43 @@ function newGridEntry(){
   addEntryButton.disabled = true;
 }
 
+//populates user input into an input form, ready for resubmition
+function editGridEntry(buttonEl){
+  let containerID = buttonEl.closest('.loan').id;
+  let target = containerID.split('-')[1]
+  console.log(target)
+  let dataArrIndex = loanData.findIndex((item)=>
+    item.id === target);
+
+  const {id, loanName, balance, rate, minPayment}=loanData[dataArrIndex]
+
+  const HTMLString = 
+  `<div class="loan" id="group-${id}">
+    <label for="name-group-${id}"><strong>Loan Name</strong></label>
+    <input type="text" placeholder="Name" id="name-group-${id}" class="loan-input" value="${loanName}"></input>
+    <label for="balance-group-${id}"><strong>Balance</strong></label>
+    <input type="number" min="1" placeholder="Balance" id="balance-group-${id}" class="loan-input" value="${balance}"></input>
+    <label for="rate-group-${id}"><strong>Interest Rate</strong></label>
+    <input type="number" min="0" step="0.1" placeholder="%" id="rate-group-${id}" class="loan-input" value="${rate}"></input>
+    <label for="minPayment"><strong>Min Monthly Payment: </strong></label>
+    <input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-group-${id}" class="loan-input" value="${minPayment}">
+    <button class="confirm-btn" id="${id}" onclick="confirmLoan(this)">CONFIRM</button>
+  </div>`
+
+  addEntryButton.style.cursor = "not-allowed"
+  addEntryButton.disabled = true;
+  document.getElementById(containerID).outerHTML =  HTMLString
+}
+
 
 //Confirmation, populates data to local storage for future use
 function confirmLoan(buttonEl){
-  const target = `${buttonEl.id}`
-  const loanName = document.getElementById(`name-${target}`).value;
-  const balance = document.getElementById(`balance-${target}`).value;
-  const min_Payment = document.getElementById(`minPayment-${target}`).value;
-  const rate = document.getElementById(`rate-${target}`).value;
+  const loanContainer = document.getElementsByClassName('loan-container')[0]
+  const target = `${buttonEl.id}`//just a number
+  const loanName = document.getElementById(`name-group-${target}`).value;
+  const balance = document.getElementById(`balance-group-${target}`).value;
+  const min_Payment = document.getElementById(`minPayment-group-${target}`).value;
+  const rate = document.getElementById(`rate-group-${target}`).value;
 
   const dataArrIndex = loanData.findIndex((item)=>item.id === target)
 
@@ -179,7 +241,7 @@ function confirmLoan(buttonEl){
   //create the data object
   const dataObj = {
     id:target,
-    loanName: loanName || target.split('-')[1],
+    loanName: loanName ? loanName : target,
     balance:balance || 0,
     rate:rate || 0,
     minPayment: min_Payment || 0,
@@ -195,8 +257,14 @@ function confirmLoan(buttonEl){
 
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
 
-  let container = document.getElementById(target)
-  addToGrid(container, dataObj)
+  let container = document.getElementById(`group-${target}`)
+
+  if(loanContainer.classList.contains('list')){
+    addToList(container, dataObj)
+
+  }else{
+    addToGrid(container, dataObj)
+  }
 }
 
 
@@ -208,16 +276,15 @@ function updateLoanContainer(){
   }else{
     updateGrid()
   }
-  loanContainer.innerHTML+=`
-  `
 }
 
 //cancel entry, deletes added container
 function cancelEntry(buttonEl){
-  let target = document.getElementById('add-entry')
-  target.disabled = false;
-  target.style.cursor = "pointer"
-  buttonEl.parentElement.remove()
+  container = buttonEl.closest('.loan')
+  let addEntry = document.getElementById('add-entry')
+  addEntry.disabled = false;
+  addEntry.style.cursor = "pointer"
+  container.remove();
 }
 
 //deletes current container
@@ -232,51 +299,38 @@ function deleteEntry(buttonEl){
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
 }
 
-//populates user input into an input form, ready for resubmition
-function editGridEntry(buttonEl){
-  let target = buttonEl.closest('.loan');
-  let dataArrIndex = loanData.findIndex((item)=>
-    item.id === target.id);
-
-  const {id, loanName, balance, rate, minPayment}=loanData[dataArrIndex]
-  const num = id.split('-')[1]
-
-  const HTMLString = 
-  `<div class="loan" id="${id}">
-    <label for="name-${id}"><strong>Loan Name</strong></label>
-    <input type="text" placeholder="Name" id="name-${id}" class="loan-input" value="${loanName}"></input>
-    <label for="balance-${id}"><strong>Balance</strong></label>
-    <input type="number" min="1" placeholder="Balance" id="balance-${id}" class="loan-input" value="${balance}"></input>
-    <label for="rate-${id}"><strong>Interest Rate</strong></label>
-    <input type="number" min="0" step="0.1" placeholder="%" id="rate-${id}" class="loan-input" value="${rate}"></input>
-    <label for="minPayment"><strong>Min Monthly Payment: </strong></label>
-    <input type="number" min="0" step="0.01" placeholder="$0.00" id="minPayment-${id}" class="loan-input" value="${minPayment}">
-    <button class="confirm-btn" id="${num}" onclick="confirmLoan(this)">CONFIRM</button>
-  </div>`
-
-  document.getElementById(target.id).outerHTML =  HTMLString
-}
-
 function listView(){
+  const toggleView = document.getElementById('view-toggle').children
+  const listView = toggleView[0]
+  const gridView = toggleView[1]
   loanContainer.classList.replace('grid', 'list')
-  loanContainer.innerHTML=
-  `<div id="header">
-    <div>Loan Name</div>
-    <div>Balance</div>
-    <div>Interest Rate</div>
-    <div>Minimum Payment</div>
-  </div>`
-  loanContainer.innerHTML += `<button id="add-list-entry" onclick="newListEntry()">+</button>`
+  listView.classList.toggle('active-view')
+  gridView.classList.toggle('active-view')
+  updateList()
 }
 
 function gridView(){
+  const toggleView = document.getElementById('view-toggle').children
+  const listView = toggleView[0]
+  const gridView = toggleView[1]
   loanContainer.classList.replace('list', 'grid')
+  gridView.classList.toggle('active-view')
+  listView.classList.toggle('active-view')
+  updateGrid()
 }
 
 //Toggle the dropdown
 function dropDown(buttonEl){
-  let content = buttonEl.nextElementSibling
+  // let content = buttonEl.nextElementSibling
   buttonEl.classList.toggle("active")
+}
+
+function expandDown(buttonEl){
+  let El = buttonEl.id.split('-')[1];
+  let content = buttonEl.closest('.loan')
+  buttonEl.classList.toggle('active')
+  content.classList.toggle('expand')
+  editListEntry(El)
 }
 
 //Toggle the separate date calendar input field
