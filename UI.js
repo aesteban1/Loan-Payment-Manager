@@ -14,41 +14,84 @@ let currentLoanData
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {}
 
-// MARK:Build the edit modal with approproate functions, and DOM updates
-function openEditModal(buttonEl){
-  let identifier = buttonEl.closest('.loan').id.split('-')[1]
+//Creates new input fields for a new list item
+function newListEntry(){
+  let identifier = Date.now()
+  openNewModal(identifier);
+}
 
+//All HTML onclick should be turned to JS eventListeners. Little at a time.
+function openEditModal(dataObj){
+  let UpdatedDataObj
+  
   let editHandler = (e)=>{
-    e.preventDefault
+    e.preventDefault()
     const formData = new FormData(modal)
-    let updatedDataObj ={
 
+    UpdatedDataObj ={
+      id:dataObj.id,
+      loanName: formData.get('loanName') || dataObj.id,
+      balance:formData.get('loanBalance') || 0,
+      rate:formData.get('loanRate') || 0,
+      minPayment: formData.get('loanMin') || 0,
+      order:formData.get('payment order'),
+      daysElapsed: null
     }
+
+    updateLocalStorage(UpdatedDataObj)
+
+    updateListItem(document.getElementById(`group-${dataObj.id}`), UpdatedDataObj)
+    modal.removeEventListener('submit', editHandler)
+  }
+
+  let cancelEdit = ()=>{
+    modal.innerHTML=''
+    modal.style.visibility='hidden'
+    backdrop.style.visibility='hidden'
+
+    modal.removeEventListener('submit', editHandler)
+  }
+
+  let deleteHandler = ()=>{
+    deleteEntry(dataObj.id)
   }
 
   modal.innerHTML = `
-      <input id="loanName" type="text" placeholder="Name" class="loan-input"></input>
-      <input id="loanBalance" type="number" min="1" placeholder="Balance ($)" class="loan-input"></input>
-      <input id="loanRate" type="number" min="0" step="0.1" placeholder="0.00%" class="loan-input"></input>
-      <input id="loanMin" type="number" min="0" step="0.01" placeholder="$0.00" class="loan-input">
+      <input id="loanName" type="text" placeholder="Name" class="loan-input" value='${dataObj.loanName}' name='loanName'></input>
+      <input id="loanBalance" type="number" min="1" placeholder="Balance ($)" class="loan-input" value='${dataObj.balance}' name='loanBalance'></input>
+      <input id="loanRate" type="number" min="0" step="0.1" placeholder="0.00%" class="loan-input" value='${dataObj.rate}' name='loanRate'></input>
+      <input id="loanMin" type="number" min="0" step="0.01" placeholder="$0.00" class="loan-input" value='${dataObj.minPayment}' name='loanMin'></input>
       <label for="payment order">Payment Order:</label>
       <select id="loanOrder" name="payment order">
         <option value="interest-first payments">Interest-First Payments</option>
         <option value="principal-first payments">Principal-First Payments</option>
       </select>
       <div id="util">
-        <button id="editModalCancel" class="cancel-btn">Cancel</button>
-        <button form="blank-modal" type="submit" id="editModalConfirm" class="confirm-btn">Confirm</button>
+        <button id="editModalDelete-${dataObj.id}" type="button">Delete</button>
+        <button id="editModalCancel-${dataObj.id}" class="cancel-btn">Cancel</button>
+        <button form="blank-modal" type="submit" id="editModalConfirm" class="confirm-btn">Update</button>
       </div>`
+
+      const cancelButton = document.getElementById(`editModalCancel-${dataObj.id}`)
+      const deleteButton = document.getElementById(`editModalDelete-${dataObj.id}`)
       modal.style.visibility='visible'
       backdrop.style.visibility='visible'
+
+      deleteButton.addEventListener('click', deleteHandler)
+      cancelButton.addEventListener('click', cancelEdit)
+      modal.addEventListener('submit', editHandler)
 }
 
 function openNewModal(identifier){
+  let newObjData
+
   let handler = (e)=>{
     e.preventDefault()
     const formData = new FormData(modal)
-    let newDataObj = {
+
+    //Need to pass 'identifier' to the handler, so the event listener should be a paramenter function.
+    //Use a function with a reference to call the handler function with parameters
+    newObjData = {
       id:identifier,
       loanName: formData.get('loanName') || identifier,
       balance:formData.get('loanBalance') || 0,
@@ -58,7 +101,8 @@ function openNewModal(identifier){
       daysElapsed: null
     }
   
-    addToList(document.getElementById('loan-List'), newDataObj)
+    updateLocalStorage(newObjData)
+    addToList(document.getElementById('loan-List'), newObjData)
     modal.removeEventListener('submit', handler)
   }
 
@@ -75,35 +119,34 @@ function openNewModal(identifier){
       <input id="loanMin" type="number" min="0" step="0.01" placeholder="$0.00" class="loan-input" name="loanMin">
       <label for="payment order">Payment Order:</label>
       <select id="loanOrder" name="payment order">
-        <option value="interest-first payments">Interest-First Payments</option>
+        <option selected value="interest-first payments">Interest-First Payments</option>
         <option value="principal-first payments">Principal-First Payments</option>
       </select>
       <div id="util">
-        <button id="newModalCancel" class="cancel-btn">Cancel</button>
+        <button id="newModalCancel-${identifier}" class="cancel-btn">Cancel</button>
         <button form="blank-modal" type="submit" id="newModalConfirm" class="confirm-btn">Confirm</button>
       </div>`;
   modal.style.visibility= 'visible';
   backdrop.style.visibility='visible';
 
-  const cancelButton = document.getElementById('newModalCancel')
-  // const confirmButton = document.getElementById('newModalConfirm')
-
+  const cancelButton = document.getElementById(`newModalCancel-${identifier}`)
   cancelButton.addEventListener('click', cancelEntry)
   modal.addEventListener('submit', handler)
 }
 
 //Displays the user input as regular text
 function addToList(loanListContainer, dataObj){
-  let dataArrIndex = loanData.findIndex((item)=>
-    item.id === dataObj.id);
+  updateLocalStorage(dataObj)
 
-  if(dataArrIndex === -1){
-    loanData.push(dataObj)
-  }else{
-    loanData[dataArrIndex] = dataObj
+  let openHandler = ()=>{
+    openEditModal(dataObj)
   }
-
-  localStorage.setItem("LPMdata", JSON.stringify(loanData))
+  let deleteHandler = ()=>{
+    deleteEntry(dataObj.id)
+  }
+  let dropDownHandler = ()=>{
+    dropDown(dataObj.id)
+  }
 
   let HTMLString = `
   <tr class="loan" id="group-${dataObj.id}">
@@ -114,16 +157,21 @@ function addToList(loanListContainer, dataObj){
     <td>${dataObj.order}</td>
     <td>
       <div class="dropdown">
-        <button class="arrow" onclick=dropDown(this)></button>
+        <button class="arrow" id='dropDownMenu-${dataObj.id}'></button>
         <ul class="dropdown-content">
-          <li><button class="edit-btn menu-item" onclick="openEditModal(this)">Edit</button></li>
-          <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
+          <li><button id="edit-${dataObj.id}" class="edit-btn menu-item">Edit</button></li>
+          <li><button id="delete-${dataObj.id}" class="delete-btn menu-item">Delete</button></li>
         </ul>
       </div>
     </td>
   </tr>`
 
   loanListContainer.insertAdjacentHTML('beforeend', HTMLString)
+
+  document.getElementById(`edit-${dataObj.id}`).addEventListener('click', openHandler)
+  document.getElementById(`delete-${dataObj.id}`).addEventListener('click',deleteHandler)
+  document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
+
   modal.innerHTML=''
   modal.style.visibility ='hidden'
   backdrop.style.visibility='hidden'
@@ -143,8 +191,11 @@ function updateList(){
     </table>`
 
   let loanList = document.getElementById('loan-List')
+
   loanData.forEach(
-    ({id, loanName, balance, rate, minPayment, order}) =>{
+    (dataObj) =>{
+      let {id, loanName, balance, rate, minPayment, order} = dataObj
+
       loanList.innerHTML += `
       <tr class="loan" id = 'group-${id}'>
         <td>${loanName}</td>
@@ -154,44 +205,76 @@ function updateList(){
         <td>${order}</td>
         <td>
           <div class="dropdown">
-            <button class="arrow" onclick=dropDown(this)></button>
+            <button class="arrow" id='dropDownMenu-${id}'></button>
             <ul class="dropdown-content">
-              <li><button class="edit-btn menu-item" onclick="openEditModal(this)">Edit</button></li>
-              <li><button class="delete-btn menu-item" onclick="deleteEntry(this)">Delete</button></li>
+              <li><button id="edit-${id}" class="edit-btn menu-item">Edit</button></li>
+              <li><button id="delete-${id}" class="delete-btn menu-item">Delete</button></li>
             </ul>
           </div>
         </td>
       </tr>`
-    }
-  )
+
+    })
+
+    loanData.forEach(
+      (dataObj)=>{
+
+        let editHandler = ()=>{
+          openEditModal(dataObj)
+        }
+
+        let deleteHandler = ()=>{
+          deleteEntry(dataObj.id)
+        }
+
+        let dropDownHandler = ()=>{
+          dropDown(dataObj.id)
+        }
+
+        document.getElementById(`edit-${dataObj.id}`).addEventListener('click',editHandler)
+        document.getElementById(`delete-${dataObj.id}`).addEventListener('click',deleteHandler)
+        document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
+      }
+    )
   loanContainer.insertAdjacentHTML("beforeend", '<button id="add-entry" onclick="newListEntry()"><span class="note">Add New Entry</span>+</button>')
 }
 
-//Creates new input fields for a new list item
-function newListEntry(){
-  let identifier = Date.now()
-  openNewModal(identifier);
-}
-
 //displays editable data within in an open modal
-function editListEntry(buttonElement){
-  currentLoanContainer = buttonElement.closest('.loan')
-  let identifier = currentLoanContainer.id.split('-')[1]
-  let dataArrIndex = loanData.findIndex((item)=>
-    item.id === identifier);
-  currentLoanData = loanData[dataArrIndex]
+function updateListItem(loanEl, dataObj){
+  openHandler =()=>{
+    openEditModal(dataObj)
+  }
 
+  let deleteHandler = ()=>{
+    deleteEntry(dataObj.id)
+  }
 
+  let dropDownHandler = ()=>{
+    dropDown(dataObj.id)
+  }
 
-  const {id, loanName, balance, rate, minPayment, order}=currentLoanData
+  loanEl.innerHTML = `
+    <td>${dataObj.loanName}</td>
+    <td>$${Number.parseFloat(dataObj.balance).toFixed(2)}</td>
+    <td>${Number.parseFloat(dataObj.rate).toFixed(2)}%</td>
+    <td>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</td>
+    <td>${dataObj.order}</td>
+    <td>
+      <div class="dropdown">
+        <button class="arrow" id='dropDownMenu-${dataObj.id}'></button>
+        <ul class="dropdown-content">
+          <li><button class="edit-btn menu-item" id='edit-${dataObj.id}'>Edit</button></li>
+          <li><button class="delete-btn menu-item" id='delete-${dataObj.id}'>Delete</button></li>
+        </ul>
+      </div>
+    </td>`
 
-  loanNameInput.value = loanName
-  loanBalanceInput.value = balance
-  loanRateInput.value = rate
-  loanMinInput.value = minPayment
-  loanOrderSelect.value = order
-  openModal()
+    document.getElementById(`edit-${dataObj.id}`).addEventListener('click', openHandler)
+    document.getElementById(`delete-${dataObj.id}`).addEventListener('click',deleteHandler)
+    document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
 
+    backdrop.style.visibility="hidden"
+    modal.style.visibility="hidden"
 }
 
 //Adds an item to the GRID
@@ -322,27 +405,9 @@ function editGridEntry(buttonEl){
   document.getElementById(containerID).outerHTML =  HTMLString
 }
 
-
 //Confirmation, populates data to local storage for future use
-function confirmLoan(buttonEl){
-  const loanContainer = document.getElementsByClassName('loan-container')[0]
-  let identifier = currentLoanContainer.id.split('-')[1]
-  const dataArrIndex = loanData.findIndex((item)=>item.id === identifier)
-
-  // let El = document.getElementById('add-entry')
-  // El.disabled = false;
-  // El.style.cursor= "pointer"
-
-  //create the data object
-  const dataObj = {
-    id:identifier,
-    loanName: loanNameInput.value ? loanNameInput.value : identifier,
-    balance:loanBalanceInput.value || 0,
-    rate:loanRateInput.value || 0,
-    minPayment: loanMinInput.value || 0,
-    order:loanOrderSelect.value,
-    daysElapsed: null
-  }
+function updateLocalStorage(dataObj){
+  const dataArrIndex = loanData.findIndex((item)=>item.id === dataObj.id)
 
   //save the data object
   if(dataArrIndex === -1){
@@ -351,19 +416,8 @@ function confirmLoan(buttonEl){
     loanData[dataArrIndex] = dataObj
   }
 
+  //Update Local storage with updated data array
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
-
-  let container = document.getElementById(`loan-List`)
-
-  if(loanContainer.classList.contains('list')){
-    addToList(container, dataObj)
-
-  }else{
-    addToGrid(container, dataObj)
-  }
-  modal.innerHTML=''
-  modal.style.visibility='hidden'
-  backdrop.style.visibility='hidden'
 }
 
 //Display user input as inline text
@@ -374,26 +428,34 @@ function updateLoanContainer(){
   }else{
     updateGrid()
   }
+
+  document.addEventListener('click',(e)=>{
+    if(!e.target.closest('.dropdown')){
+      document.querySelectorAll('.arrow').forEach((el)=>{
+        el.classList.remove('active')
+      })
+    }
+  })
 }
 
 //cancel entry, deletes added container
-function cancelEntry(buttonEl){
-  const openModal = buttonEl.closest('.editable-modal')
-  openModal.style.visibility = 'hidden'
+function cancelEntry(){
+  modal.innerHTML=''
+  modal.style.visibility = 'hidden'
   backdrop.style.visibility = 'hidden'
-  openModal.innerHTML=''
 }
 
 //deletes current container
-function deleteEntry(buttonEl){
-  let container = buttonEl.closest('.loan')
+function deleteEntry(id){
+  let container = document.getElementById(`group-${id}`).parentElement
   let dataArrIndex = loanData.findIndex((item)=>
-    item.id === container.id
+    item.id === id
   );
-
   container.remove();
   loanData.splice(dataArrIndex, 1);
   localStorage.setItem("LPMdata", JSON.stringify(loanData))
+  modal.style.visibility='hidden'
+  backdrop.style.visibility='hidden'
 }
 
 function listView(){
@@ -421,18 +483,19 @@ function gridView(){
 }
 
 //Toggle the dropdown
-function dropDown(buttonEl){
-  // let content = buttonEl.nextElementSibling
-  buttonEl.classList.toggle("active")
-}
+function dropDown(id){
+  let isOpen = document.getElementById(`dropDownMenu-${id}`).classList.contains('active')
 
-// function expandDown(buttonEl){
-//   let El = buttonEl.id.split('-')[1];
-//   let content = buttonEl.closest('.loan')
-//   buttonEl.classList.toggle('active')
-//   content.classList.toggle('expand')
-//   editListEntry(El)
-// }
+  document.querySelectorAll('.arrow').forEach((el)=>{
+    el.classList.remove('active')
+  })
+
+  if(!isOpen){
+    document.getElementById(`dropDownMenu-${id}`).classList.add('active')
+  }else{
+    document.getElementById(`dropDownMenu-${id}`).classList.remove('active')
+  }
+}
 
 //Toggle the separate date calendar input field
 function toggleSwitch(inputEl){
@@ -442,7 +505,7 @@ function toggleSwitch(inputEl){
   targetEl.classList.toggle('toggleSwitch')  
 }
 
-//reload all local storage data into the display field
+//reload all local storage data to the display field
 window.addEventListener('DOMContentLoaded', (e)=>{
   updateLoanContainer()
 })
