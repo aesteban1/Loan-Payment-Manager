@@ -77,7 +77,7 @@ function calculateTimeline(data, range=1){
   f.setFullYear(f.getFullYear()+range)
 
   for(let i=0; i< 26;i++){
-    console.log(new Date(f.setDate(f.getDate()+1)))
+    // console.log(new Date(f.setDate(f.getDate()+1)))
     if(rangeInDays(p, f)){}
   }
   
