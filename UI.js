@@ -3,12 +3,21 @@ const updateLoansBtn = document.getElementById('update-loans')
 const viewToggleContainer = document.getElementById('view-toggle')
 const backdrop = document.getElementById('overlay')
 const modal = document.getElementById('blank-modal')
-let currentLoanContainer
-let currentLoanData
+let selectedItemsArray = null
 
 
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {}
+
+function toolListeners(){
+  let selectListener = ()=>{
+    if(localStorage.getItem('viewMode') === 'list'){
+      selectListRender()
+    }else{
+      selectGridRender()
+    }
+  }
+}
 
 function viewListeners(){
   let listViewHandler = ()=>{listView()}
@@ -464,7 +473,9 @@ function updateGridItem(loanEl, dataObj){
     <span><strong>Interest Rate: </strong></span>
     <p>${Number.parseFloat(dataObj.rate).toFixed(2)}%</p>
     <span><strong>Minimum Payment: </strong></span>
-    <p>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</p>`
+    <p>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</p>
+    <span><strong>Payment Order</strong><span>
+    <p>${dataObj.order}</p>`
 
   document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
   document.getElementById(`edit-${dataObj.id}`).addEventListener('click', openHandler)
@@ -611,6 +622,48 @@ function dropDown(id){
   }else{
     document.getElementById(`dropDownMenu-${id}`).classList.remove('active')
   }
+}
+
+function selectGridItem(element){
+  if(!selectedItemsArray){
+    selectedItemsArray = []
+  }
+  if(selectedItemsArray.includes(element.id)){
+    element.classList.remove('selected')
+    selectedItemsArray = selectedItemsArray.filter(i => i !== element.id)
+  }else{
+    selectedItemsArray.push(element.id)
+    element.classList.add('selected')
+  }
+}
+
+function selectGridRender(){
+  loanContainer.innerHTML = ''
+  loanData.forEach(({id, loanName, balance, rate, minPayment, order, loanType})=>{
+    let HTMLString = `
+    <div class="selectable loan" id="group-${id}">
+      <span><strong>Loan Name:</strong></span>
+      <p>${loanName}</p>
+      <span><strong>Balance:</strong></span>
+      <p>$${Number.parseFloat(balance).toFixed(2)}</p>
+      <span><strong>Interest Rate: </strong></span>
+      <p>${Number.parseFloat(rate).toFixed(2)}%</p>
+      <span><strong>Minimum Payment: </strong></span>
+      <p>$${Number.parseFloat(minPayment).toFixed(2)}</p>
+      <span><strong>Payment Order</strong></span>
+      <p>${order}</p>
+     </div>`
+
+    loanContainer.insertAdjacentHTML(`beforeend`, HTMLString)
+
+    let element = document.getElementById(`group-${id}`)
+    let selectHandler = ()=>{
+      selectGridItem(element)
+    }
+    element.addEventListener('click', selectHandler)
+  })
+  HTMLString = `<button id='exit-multiselect'>Done</button>`
+  loanContainer.insertAdjacentHTML('beforeend', HTMLString)
 }
 
 //reload all local storage data to the display field

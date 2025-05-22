@@ -44,6 +44,7 @@ h1 {
   height: 2rem;
   width: 10ch;
   border-radius: 5px;
+  cursor: pointer;
 }
 #confirm-modal #yes-btn:hover {
   color: #ffffff;
@@ -74,22 +75,29 @@ h1 {
   margin: 0;
 }
 
-#view-toggle {
+#utilities {
+  display: flex;
+}
+
+#view-toggle,
+#tools {
   display: flex;
   position: relative;
   list-style: none;
   width: fit-content;
   border-radius: 5px;
-  margin: 10px 15px 5px;
+  margin: 10px 0px 10px 25px;
   padding: 0;
   background-color: #825daf;
 }
-#view-toggle li {
+#view-toggle li,
+#tools li {
   box-sizing: border-box;
   border-radius: 5px;
   padding: 5px;
 }
-#view-toggle li a {
+#view-toggle li a,
+#tools li a {
   display: inline-block;
   height: 24px;
   cursor: pointer;
@@ -116,19 +124,34 @@ h1 {
   background-color: #484848;
 }
 
+@keyframes gridSelect {
+  0%, 100% {
+    scale: 1;
+  }
+  50% {
+    scale: 0.95;
+  }
+}
 .grid {
   display: grid;
   justify-items: center;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: auto auto auto;
 }
+.grid .selectable {
+  cursor: pointer;
+}
+.grid .selected {
+  border: 1px solid #825dff;
+  animation: 0.3s cubic-bezier(0, -0.01, 0, 1.01) gridSelect;
+}
 .grid .loan {
   box-sizing: border-box;
   border-radius: 10px;
   padding: 25px 20px;
   margin: 10px;
-  height: 290px;
-  width: 240px;
+  height: 320px;
+  width: 260px;
 }
 .grid .loan p {
   height: 1rem;
@@ -156,8 +179,8 @@ h1 {
   color: #e9e9e9;
 }
 .grid #add-entry {
-  height: 290px;
-  width: 240px;
+  height: 320px;
+  width: 260px;
   box-sizing: border-box;
   border-radius: 10px;
   padding: 0;
@@ -321,10 +344,6 @@ h1 {
   color: #e9e9e9;
   height: 2rem;
   width: 20ch;
-}
-
-.loan-input::before {
-  content: attr(data-cell) ": ";
 }
 
 .loan > label,

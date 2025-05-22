@@ -43,6 +43,7 @@ h1{
     height: 2rem;
     width: 10ch;
     border-radius: 5px;
+    cursor: pointer;
   }
   #yes-btn:hover{
     color: #ffffff;
@@ -74,13 +75,18 @@ h1{
   margin: 0;
 }
 
-#view-toggle{
+#utilities{
+  display: flex;
+}
+
+#view-toggle,
+#tools{
   display: flex;
   position: relative;
   list-style: none;
   width: fit-content;
   border-radius: 5px;
-  margin: 10px 15px 5px;
+  margin: 10px 0px 10px 25px;
   padding: 0;
   background-color:#825daf;
   li{
@@ -117,18 +123,35 @@ h1{
   background-color: #484848;
 }
 
+@keyframes gridSelect {
+  0%,
+  100%{
+    scale: 1;
+  }
+  50%{
+    scale: 0.95;
+  }
+}
+
 .grid{
   display: grid;
   justify-items: center;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: auto auto auto;
+  .selectable{
+    cursor: pointer;
+  }
+  .selected{
+    border: 1px solid #825dff;
+    animation: 0.3s cubic-bezier(0,-0.01,0,1.01) gridSelect; 
+  }
   .loan{
     box-sizing: border-box;
     border-radius: 10px;
     padding: 25px 20px;
     margin: 10px;
-    height: 290px;
-    width: 240px;
+    height: 320px;
+    width: 260px;
     p{
       height: 1rem;
       width: 15ch;
@@ -157,8 +180,8 @@ h1{
     }
   }
   #add-entry{
-  height: 290px;
-  width: 240px;
+  height: 320px;
+  width: 260px;
   box-sizing: border-box;
   border-radius: 10px;
   padding: 0;
@@ -336,9 +359,6 @@ h1{
   color: #e9e9e9;
   height: 2rem;
   width: 20ch;
-}
-.loan-input::before{
-  content: attr(data-cell) ": ";
 }
 
 .loan > label,
