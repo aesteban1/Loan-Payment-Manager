@@ -142,7 +142,7 @@ h1{
     cursor: pointer;
   }
   .selected{
-    border: 1px solid #825dff;
+    outline: 1px solid #825dff;
     animation: 0.3s cubic-bezier(0,-0.01,0,1.01) gridSelect; 
   }
   .loan{
@@ -202,6 +202,12 @@ h1{
   td{
     text-align: left;
     padding: 0.5rem 1rem;
+  }
+  .selectable{
+    cursor: pointer;
+  }
+  .selected > *{
+    background-color: rgb(130, 93, 175, 0.5);
   }
   .loan{
     position: relative;

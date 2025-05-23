@@ -1,6 +1,7 @@
 const loanContainer = document.querySelector('.loan-container')
 const updateLoansBtn = document.getElementById('update-loans')
 const viewToggleContainer = document.getElementById('view-toggle')
+const toolsContainer = document.getElementById('tools')
 const backdrop = document.getElementById('overlay')
 const modal = document.getElementById('blank-modal')
 let selectedItemsArray = null
@@ -17,6 +18,8 @@ function toolListeners(){
       selectGridRender()
     }
   }
+  let multiselect = document.getElementById('multi-select')
+  multiselect.addEventListener('click', selectListener)
 }
 
 function viewListeners(){
@@ -637,6 +640,20 @@ function selectGridItem(element){
   }
 }
 
+function selectListItem(element){
+  let targetItem = element.children[0]
+  if(!selectedItemsArray){
+    selectedItemsArray = []
+  }
+  if(selectedItemsArray.includes(targetItem.id)){
+    element.classList.remove('selected')
+    selectedItemsArray = selectedItemsArray.filter(i=> i !== targetItem.id)
+  }else{
+    selectedItemsArray.push(targetItem.id)
+    element.classList.add('selected')
+  }
+}
+
 function selectGridRender(){
   loanContainer.innerHTML = ''
   loanData.forEach(({id, loanName, balance, rate, minPayment, order, loanType})=>{
@@ -666,8 +683,45 @@ function selectGridRender(){
   loanContainer.insertAdjacentHTML('beforeend', HTMLString)
 }
 
+function selectListRender(){
+  loanContainer.innerHTML =`
+    <table id="loan-List">
+      <tr id="header">
+        <th>Loan Name</th>
+        <th>Balance</th>
+        <th>Interest Rate</th>
+        <th>Minimum Payment</th>
+        <th>Payment Order</th>
+      </tr>
+    </table>`
+  let loanList =  document.getElementById('loan-List')
+  let HTMLString
+  loanData.forEach(
+    ({id, loanName, balance, rate, minPayment, order, loanType}) =>{
+
+      HTMLString =`
+      <tr class=" selectable loan" id='group-${id}'>
+        <td>${loanName}</td>
+        <td>$${Number.parseFloat(balance).toFixed(2)}</td>
+        <td>${Number.parseFloat(rate).toFixed(2)}%</td>
+        <td>$${Number.parseFloat(minPayment).toFixed(2)}</td>
+        <td>${order}</td>
+      </tr>`
+      loanList.insertAdjacentHTML('beforeend', HTMLString)
+      let element = document.getElementById(`group-${id}`).parentElement
+      console.log(element)
+      let selectHandler = ()=>{
+        selectListItem(element)
+      }
+      element.addEventListener('click', selectHandler)
+    })
+    HTMLString = `<button id='exit-multiselect'>Done</button>`
+    loanContainer.insertAdjacentHTML('beforeend', HTMLString)
+}
+
 //reload all local storage data to the display field
 window.addEventListener('DOMContentLoaded', (e)=>{
   updateLoanContainer()
   viewListeners()
+  toolListeners()
 })
