@@ -89,16 +89,14 @@ h1{
   margin: 10px 0px 10px 25px;
   padding: 0;
   background-color:#825daf;
+  height: 34px;
   li{
     box-sizing: border-box;
     border-radius: 5px;
     padding: 5px;
-    // border: 1px solid green;
-    a{
-      display: inline-block;
-      height: 24px;
-      cursor: pointer;
-    }
+    display: inline-block;
+    height: 34px;
+    cursor: pointer;
   }
 }
 
@@ -214,8 +212,8 @@ h1{
     height: 50px;
     transition: all 0.3s ease-in-out;
     div{
-      align-content: center;}
-
+      align-content: center;
+    }
     td{
       color:#d4b6f9;
       text-shadow: 2px 3px 4px #121212;
@@ -223,15 +221,22 @@ h1{
       font-weight: 600;
       margin: 0;}
 
-    input{
+      > input{
       line-height: 1.5rem;
       height: 2rem;
       width: 100%;
       border: none;
       background-color: #333333;
       color: white;
-      box-sizing: border-box;}
-
+      box-sizing: border-box;
+    }
+    .dropdown{
+      padding-right: 1rem;
+      .dropdown-content{
+        position: absolute;
+        left: 5px;
+      }
+    }
     input:focus{
       outline: 1px solid gray;
     }
@@ -257,8 +262,52 @@ h1{
         background-color: #f34642;
       }
     }
+    .checkbox-container{
+      display: block;
+      position: relative;
+      cursor: pointer;
+      font-size: 22px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      height: 34px;
+      right: 14px;
+      input{
+        position: absolute;
+        top: 0;
+        left: 0;
+        cursor: pointer;
+        opacity: 0;
+        margin: 0;
+        height: 0;
+        width: 0;
+      }
+      .checkmark{
+        position: absolute;
+        left: 0;
+        top: 6px;
+        height: 20px;
+        width: 20px;
+        margin: auto 0;
+        background-color: #808080;
+        outline: 1px solid white;
+      }
+      input:checked + .checkmark{
+        background-color: #825dff;
+        outline: 1px solid white;
+      }
 
+      input:checked + .checkmark::after{
+        content: "✓";
+        color: white;
+        display: block;
+        text-align: center;
+        line-height: 20px;
+      }
+    }
   }
+
   .expand{
     height: 200px;
     transition: all 0.3s ease-in-out;

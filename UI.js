@@ -12,12 +12,15 @@ let currentData = {}
 
 function toolListeners(){
   let selectListener = ()=>{
-    if(localStorage.getItem('viewMode') === 'list'){
-      selectListRender()
+    let viewMode = localStorage.getItem('viewMode')
+    if(!multiselect.classList.contains('active-view')){
+      viewMode === 'list' ? selectListRender() : selectGridRender()
     }else{
-      selectGridRender()
+      viewMode === 'list' ? listView() : gridView()
     }
+    multiselect.classList.toggle('active-view')
   }
+  
   let multiselect = document.getElementById('multi-select')
   multiselect.addEventListener('click', selectListener)
 }
@@ -681,6 +684,7 @@ function selectGridRender(){
   })
   HTMLString = `<button id='exit-multiselect'>Done</button>`
   loanContainer.insertAdjacentHTML('beforeend', HTMLString)
+
 }
 
 function selectListRender(){
@@ -700,20 +704,25 @@ function selectListRender(){
     ({id, loanName, balance, rate, minPayment, order, loanType}) =>{
 
       HTMLString =`
-      <tr class=" selectable loan" id='group-${id}'>
+      <tr class="loan" id='group-${id}'>
         <td>${loanName}</td>
         <td>$${Number.parseFloat(balance).toFixed(2)}</td>
         <td>${Number.parseFloat(rate).toFixed(2)}%</td>
         <td>$${Number.parseFloat(minPayment).toFixed(2)}</td>
         <td>${order}</td>
+        <td>
+          <label class="checkbox-container">
+            <input class="checkbox" id="check-${id}" type="checkbox"></input>
+            <span class="checkmark"></span>
+          </label>
+        </td>
       </tr>`
       loanList.insertAdjacentHTML('beforeend', HTMLString)
       let element = document.getElementById(`group-${id}`).parentElement
-      console.log(element)
       let selectHandler = ()=>{
         selectListItem(element)
       }
-      element.addEventListener('click', selectHandler)
+      // element.addEventListener('click', selectHandler)
     })
     HTMLString = `<button id='exit-multiselect'>Done</button>`
     loanContainer.insertAdjacentHTML('beforeend', HTMLString)
