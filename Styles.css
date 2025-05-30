@@ -79,27 +79,44 @@ h1 {
 #utilities {
   display: flex;
 }
-
-#view-toggle,
-#tools {
+#utilities ul {
   display: flex;
   position: relative;
   list-style: none;
   width: fit-content;
-  border-radius: 5px;
   margin: 10px 0px 10px 25px;
   padding: 0;
+  cursor: pointer;
+}
+#utilities #view-toggle,
+#utilities #tools {
+  border-radius: 5px;
   background-color: #825daf;
   height: 34px;
 }
-#view-toggle li,
-#tools li {
+#utilities #view-toggle li,
+#utilities #tools li {
   box-sizing: border-box;
   border-radius: 5px;
   padding: 5px;
   display: inline-block;
   height: 34px;
-  cursor: pointer;
+}
+
+#multiselect-actions {
+  gap: 1rem;
+}
+#multiselect-actions #exit-multiselect,
+#multiselect-actions #delete-multiselect {
+  background-color: #707070;
+  padding: 8px;
+  border-radius: 5px;
+}
+#multiselect-actions #selected-count {
+  font-size: 1.2rem;
+  text-align: center;
+  align-content: center;
+  cursor: default;
 }
 
 .active-view {

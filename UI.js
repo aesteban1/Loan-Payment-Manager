@@ -4,8 +4,9 @@ const viewToggleContainer = document.getElementById('view-toggle')
 const toolsContainer = document.getElementById('tools')
 const backdrop = document.getElementById('overlay')
 const modal = document.getElementById('blank-modal')
+const utilities = document.getElementById('utilities')
 let selectedItemsArray = null
-
+let countElement
 
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {}
@@ -17,6 +18,7 @@ function toolListeners(){
       viewMode === 'list' ? selectListRender() : selectGridRender()
     }else{
       viewMode === 'list' ? listView() : gridView()
+      document.getElementById('multiselect-actions').remove()
     }
     multiselect.classList.toggle('active-view')
   }
@@ -630,17 +632,42 @@ function dropDown(id){
   }
 }
 
+function exitMultiselect(){
+  let viewMode = localStorage.getItem('viewMode')
+  viewMode === 'list' ? listView() : gridView()
+  document.getElementById('multiselect-actions').remove()
+  document.getElementById('multi-select').classList.toggle('active-view')
+}
+
+function deleteMultiselect(){
+  console.log('deleteMultiselect function executed')
+  selectedItemsArray.forEach((item)=>{
+
+    document.getElementById(`${item}`).remove()
+  })
+  countElement.innerHTML=``
+  let viewMode = localStorage.getItem('viewMode')
+  viewMode === 'list' ? listView() : gridView()
+  document.getElementById('multiselect-actions').remove()
+  document.getElementById('multi-select').classList.toggle('active-view')
+
+}
+
 function selectGridItem(element){
   if(!selectedItemsArray){
     selectedItemsArray = []
+    countElement = document.getElementById('selected-count')
   }
   if(selectedItemsArray.includes(element.id)){
     element.classList.remove('selected')
     selectedItemsArray = selectedItemsArray.filter(i => i !== element.id)
+    countElement.innerHTML = selectedItemsArray.length ? `${selectedItemsArray.length} selected` : ``
   }else{
     selectedItemsArray.push(element.id)
     element.classList.add('selected')
+    countElement.innerHTML = `${selectedItemsArray.length} selected`
   }
+  console.log(selectedItemsArray)
 }
 
 function selectListItem(element){
@@ -658,8 +685,8 @@ function selectListItem(element){
 }
 
 function selectGridRender(){
-  loanContainer.innerHTML = ''
-  loanData.forEach(({id, loanName, balance, rate, minPayment, order, loanType})=>{
+  loanContainer.innerHTML = ''//clear the container
+  loanData.forEach(({id, loanName, balance, rate, minPayment, order, loanType})=>{//re-render to be selectable
     let HTMLString = `
     <div class="selectable loan" id="group-${id}">
       <span><strong>Loan Name:</strong></span>
@@ -674,17 +701,25 @@ function selectGridRender(){
       <p>${order}</p>
      </div>`
 
-    loanContainer.insertAdjacentHTML(`beforeend`, HTMLString)
+    loanContainer.insertAdjacentHTML(`beforeend`, HTMLString)//insert after last item
 
-    let element = document.getElementById(`group-${id}`)
+    let element = document.getElementById(`group-${id}`)//reference the recently added item
     let selectHandler = ()=>{
-      selectGridItem(element)
+      selectGridItem(element)//pass the this element to the function
     }
-    element.addEventListener('click', selectHandler)
+    element.addEventListener('click', selectHandler)//add a listener, make it selectable
   })
-  HTMLString = `<button id='exit-multiselect'>Done</button>`
-  loanContainer.insertAdjacentHTML('beforeend', HTMLString)
 
+  //after all items are added, inject the tool elements
+  HTMLString = `
+  <ul id='multiselect-actions'>
+      <li id='exit-multiselect'>Cancel</li>
+      <li id="delete-multiselect">Delete</li>
+      <li id="selected-count"></li>
+  </ul>`
+  utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar
+  document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
+  document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)
 }
 
 function selectListRender(){
