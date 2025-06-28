@@ -118,6 +118,33 @@ h1 {
   align-content: center;
   cursor: default;
 }
+#multiselect-actions #delete-multiselect:hover {
+  background-color: #ed5e68;
+}
+#multiselect-actions #exit-multiselect:hover {
+  background-color: #505050;
+}
+
+@keyframes noSelection {
+  0% {
+    color: gray;
+    font-size: 1.2rem;
+    opacity: 1;
+  }
+  50% {
+    color: #ff6666;
+    font-size: 1.4rem;
+    opacity: 0.8;
+  }
+  100% {
+    color: gray;
+    font-size: 1.2rem;
+    opacity: 1;
+  }
+}
+.noneSelected {
+  animation: noSelection 0.8s ease-in-out;
+}
 
 .active-view {
   background-color: #bb86fc;
@@ -224,6 +251,52 @@ h1 {
 .list .selected > * {
   background-color: rgba(130, 93, 175, 0.5);
 }
+.list .selectable-row {
+  cursor: pointer;
+}
+.list .checkbox-container {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  font-size: 22px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  height: 30px;
+  right: 12px;
+}
+.list .checkbox-container input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+  opacity: 0;
+  margin: 0;
+  height: 0;
+  width: 0;
+}
+.list .checkbox-container .checkmark {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  height: 20px;
+  width: 20px;
+  margin: auto 0;
+  background-color: #808080;
+  outline: 1px solid white;
+}
+.list .checkbox-container input:checked + .checkmark {
+  background-color: #825dff;
+  outline: 1px solid white;
+}
+.list .checkbox-container input:checked + .checkmark::after {
+  content: "✓";
+  color: white;
+  display: block;
+  text-align: center;
+  line-height: 20px;
+}
 .list .loan {
   position: relative;
   height: 50px;
@@ -278,49 +351,6 @@ h1 {
 }
 .list .loan #util .cancel-btn:hover {
   background-color: #f34642;
-}
-.list .loan .checkbox-container {
-  display: block;
-  position: relative;
-  cursor: pointer;
-  font-size: 22px;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  height: 34px;
-  right: 14px;
-}
-.list .loan .checkbox-container input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  cursor: pointer;
-  opacity: 0;
-  margin: 0;
-  height: 0;
-  width: 0;
-}
-.list .loan .checkbox-container .checkmark {
-  position: absolute;
-  left: 0;
-  top: 6px;
-  height: 20px;
-  width: 20px;
-  margin: auto 0;
-  background-color: #808080;
-  outline: 1px solid white;
-}
-.list .loan .checkbox-container input:checked + .checkmark {
-  background-color: #825dff;
-  outline: 1px solid white;
-}
-.list .loan .checkbox-container input:checked + .checkmark::after {
-  content: "✓";
-  color: white;
-  display: block;
-  text-align: center;
-  line-height: 20px;
 }
 .list .expand {
   height: 200px;

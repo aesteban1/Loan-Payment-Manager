@@ -633,24 +633,42 @@ function dropDown(id){
 }
 
 function exitMultiselect(){
+
+  let elements = document.querySelectorAll('.selectable')
+  elements.forEach((el)=>{
+    el.remove()
+  })
   let viewMode = localStorage.getItem('viewMode')
+  selectedItemsArray = null
   viewMode === 'list' ? listView() : gridView()
   document.getElementById('multiselect-actions').remove()
   document.getElementById('multi-select').classList.toggle('active-view')
 }
 
 function deleteMultiselect(){
-  console.log('deleteMultiselect function executed')
-  selectedItemsArray.forEach((item)=>{
-
-    document.getElementById(`${item}`).remove()
-  })
-  countElement.innerHTML=``
-  let viewMode = localStorage.getItem('viewMode')
-  viewMode === 'list' ? listView() : gridView()
-  document.getElementById('multiselect-actions').remove()
-  document.getElementById('multi-select').classList.toggle('active-view')
-
+  if(selectedItemsArray){
+    selectedItemsArray.forEach((item)=>{
+      let identifier = item.split('-')[1]
+      let dataArrIndex = loanData.findIndex((item) => {
+        item.id === identifier
+      })
+      loanData.splice(dataArrIndex, 1);
+      document.getElementById(`${item}`).remove()
+    })
+    selectedItemsArray = null
+    localStorage.setItem("LPMdata", JSON.stringify(loanData))
+    countElement.innerHTML=``
+    let viewMode = localStorage.getItem('viewMode')
+    viewMode === 'list' ? listView() : gridView()
+    document.getElementById('multiselect-actions').remove()
+    document.getElementById('multi-select').classList.toggle('active-view')
+  }else{
+    let counter = document.getElementById('selected-count')
+    counter.classList.add('noneSelected')
+    setTimeout(() => {
+      counter.classList.remove('noneSelected');
+    }, 800)
+  }
 }
 
 function selectGridItem(element){
@@ -661,26 +679,26 @@ function selectGridItem(element){
   if(selectedItemsArray.includes(element.id)){
     element.classList.remove('selected')
     selectedItemsArray = selectedItemsArray.filter(i => i !== element.id)
-    countElement.innerHTML = selectedItemsArray.length ? `${selectedItemsArray.length} selected` : ``
+    countElement.innerHTML = selectedItemsArray.length ? `${selectedItemsArray.length} selected` : ` 0 selected`
   }else{
     selectedItemsArray.push(element.id)
     element.classList.add('selected')
     countElement.innerHTML = `${selectedItemsArray.length} selected`
   }
-  console.log(selectedItemsArray)
 }
 
 function selectListItem(element){
-  let targetItem = element.children[0]
+  let targetItem = element
   if(!selectedItemsArray){
     selectedItemsArray = []
+    countElement = document.getElementById('selected-count')
   }
   if(selectedItemsArray.includes(targetItem.id)){
-    element.classList.remove('selected')
     selectedItemsArray = selectedItemsArray.filter(i=> i !== targetItem.id)
+    countElement.innerHTML = selectedItemsArray.length ? `${selectedItemsArray.length} selected` : '0 selected'
   }else{
     selectedItemsArray.push(targetItem.id)
-    element.classList.add('selected')
+    countElement.innerHTML = `${selectedItemsArray.length} selected`
   }
 }
 
@@ -714,8 +732,8 @@ function selectGridRender(){
   HTMLString = `
   <ul id='multiselect-actions'>
       <li id='exit-multiselect'>Cancel</li>
-      <li id="delete-multiselect">Delete</li>
-      <li id="selected-count"></li>
+      <li id="delete-multiselect" disabled>Delete</li>
+      <li id="selected-count"> 0 selected</li>
   </ul>`
   utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar
   document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
@@ -731,15 +749,22 @@ function selectListRender(){
         <th>Interest Rate</th>
         <th>Minimum Payment</th>
         <th>Payment Order</th>
+        <th>
+          <label class="checkbox-container">
+            <input type="checkbox" class="checkbox" id="select-all"></input>
+            <span class="checkmark"></span>
+          </label>
+        </th>
       </tr>
     </table>`
-  let loanList =  document.getElementById('loan-List')
-  let HTMLString
+  let loanList =  document.getElementById('loan-List') //the list items container
+  let HTMLString;
+
   loanData.forEach(
     ({id, loanName, balance, rate, minPayment, order, loanType}) =>{
 
       HTMLString =`
-      <tr class="loan" id='group-${id}'>
+      <tr class="loan selectable-row" id='group-${id}'>
         <td>${loanName}</td>
         <td>$${Number.parseFloat(balance).toFixed(2)}</td>
         <td>${Number.parseFloat(rate).toFixed(2)}%</td>
@@ -753,15 +778,37 @@ function selectListRender(){
         </td>
       </tr>`
       loanList.insertAdjacentHTML('beforeend', HTMLString)
-      let element = document.getElementById(`group-${id}`).parentElement
-      let selectHandler = ()=>{
-        selectListItem(element)
-      }
-      // element.addEventListener('click', selectHandler)
     })
-    HTMLString = `<button id='exit-multiselect'>Done</button>`
-    loanContainer.insertAdjacentHTML('beforeend', HTMLString)
-}
+
+    let selectHandler = (e)=>{
+      let row = e.target.closest('tr.selectable-row')
+
+      if(!row) return;
+
+      if(
+        e.target.closest('label.checkbox-container') ||
+        e.target.tagName === 'INPUT'
+      )row.classList.toggle('selected');
+
+      const checkbox = row.querySelector('.checkbox')
+      checkbox.checked = !checkbox.checked;
+
+      row.classList.toggle('selected', checkbox.checked)
+      selectListItem(row)
+    }
+    loanList.addEventListener('click', (e)=>{
+      selectHandler(e)
+    })
+
+    HTMLString = `
+    <ul id='multiselect-actions'>
+        <li id='exit-multiselect'>Cancel</li>
+        <li id="delete-multiselect" disabled>Delete</li>
+        <li id="selected-count"> 0 selected</li>
+    </ul>`
+    utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar
+    document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
+    document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)}
 
 //reload all local storage data to the display field
 window.addEventListener('DOMContentLoaded', (e)=>{
