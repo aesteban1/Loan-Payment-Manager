@@ -6,6 +6,7 @@ const backdrop = document.getElementById('overlay')
 const modal = document.getElementById('blank-modal')
 const utilities = document.getElementById('utilities')
 let selectedItemsArray = null
+let selectMode = false;
 let countElement
 
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
@@ -590,31 +591,54 @@ function deleteEntry(id){
 function listView(){
   const toggleView = document.getElementById('view-toggle').children
   const listView = toggleView[0]
+  const gridView = toggleView[1]
 
-  Array.from(toggleView).forEach((el)=>{
-    el.classList.remove('active-view')})
+  if(selectMode){
+    document.getElementById('multiselect-actions').remove()
 
-  if(!listView.classList.contains('active-view')){
-    loanContainer.classList.replace('grid', 'list')
-    listView.classList.toggle('active-view')
-    updateList()
     localStorage.setItem('viewMode', 'list')
+    loanContainer.classList.replace('grid', 'list')
+
+    selectListRender()
+  }else{
+    Array.from(toggleView).forEach((el)=>{
+      el.classList.remove('active-view')})
+
+    if(!listView.classList.contains('active-view')){
+      loanContainer.classList.replace('grid', 'list')
+      updateList()
+      localStorage.setItem('viewMode', 'list')
+    }
   }
+  listView.classList.add('active-view')
+  gridView.classList.remove('active-view')
 }
 
 function gridView(){
   const toggleView = document.getElementById('view-toggle').children
   const gridView = toggleView[1]
+  const listView = toggleView[0]
 
-  Array.from(toggleView).forEach((el)=>{
-    el.classList.remove('active-view')})
+  if(selectMode){
+    document.getElementById('multiselect-actions').remove()
 
-  if(!gridView.classList.contains('active-view')){
-    loanContainer.classList.replace('list', 'grid')
-    gridView.classList.toggle('active-view')
-    updateGrid()
     localStorage.setItem('viewMode', 'grid')
+    loanContainer.classList.replace('list', 'grid')
+
+    selectGridRender()
+  }else{
+
+    Array.from(toggleView).forEach((el)=>{
+      el.classList.remove('active-view')})
+
+    if(!gridView.classList.contains('active-view')){
+      loanContainer.classList.replace('list', 'grid')
+      updateGrid()
+      localStorage.setItem('viewMode', 'grid')
+    }
   }
+  gridView.classList.add('active-view')
+  listView.classList.remove('active-view')
 }
 
 //Toggle the dropdown
@@ -640,9 +664,11 @@ function exitMultiselect(){
   })
   let viewMode = localStorage.getItem('viewMode')
   selectedItemsArray = null
-  viewMode === 'list' ? listView() : gridView()
+  selectMode=false;
   document.getElementById('multiselect-actions').remove()
   document.getElementById('multi-select').classList.toggle('active-view')
+  viewMode === 'list' ? listView() : gridView()
+
 }
 
 function deleteMultiselect(){
@@ -652,18 +678,23 @@ function deleteMultiselect(){
       let dataArrIndex = loanData.findIndex((item) => {
         item.id === identifier
       })
+
       loanData.splice(dataArrIndex, 1);
       document.getElementById(`${item}`).remove()
     })
+
     selectedItemsArray = null
-    localStorage.setItem("LPMdata", JSON.stringify(loanData))
     countElement.innerHTML=``
+    localStorage.setItem("LPMdata", JSON.stringify(loanData))
+
     let viewMode = localStorage.getItem('viewMode')
     viewMode === 'list' ? listView() : gridView()
+
     document.getElementById('multiselect-actions').remove()
     document.getElementById('multi-select').classList.toggle('active-view')
   }else{
     let counter = document.getElementById('selected-count')
+
     counter.classList.add('noneSelected')
     setTimeout(() => {
       counter.classList.remove('noneSelected');
@@ -704,6 +735,7 @@ function selectListItem(element){
 
 function selectGridRender(){
   loanContainer.innerHTML = ''//clear the container
+  selectMode = true;
   loanData.forEach(({id, loanName, balance, rate, minPayment, order, loanType})=>{//re-render to be selectable
     let HTMLString = `
     <div class="selectable loan" id="group-${id}">
@@ -720,6 +752,8 @@ function selectGridRender(){
      </div>`
 
     loanContainer.insertAdjacentHTML(`beforeend`, HTMLString)//insert after last item
+
+    if(selectedItemsArray){}//Preserve selections going from list to grid view
 
     let element = document.getElementById(`group-${id}`)//reference the recently added item
     let selectHandler = ()=>{
@@ -738,9 +772,11 @@ function selectGridRender(){
   utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar
   document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
   document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)
+
 }
 
 function selectListRender(){
+  selectMode = true;
   loanContainer.innerHTML =`
     <table id="loan-List">
       <tr id="header">
@@ -808,7 +844,8 @@ function selectListRender(){
     </ul>`
     utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar
     document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
-    document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)}
+    document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)
+}
 
 //reload all local storage data to the display field
 window.addEventListener('DOMContentLoaded', (e)=>{
