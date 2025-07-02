@@ -17,11 +17,10 @@ function toolListeners(){
     let viewMode = localStorage.getItem('viewMode')
     if(!multiselect.classList.contains('active-view')){
       viewMode === 'list' ? selectListRender() : selectGridRender()
+      multiselect.classList.add('active-view')
     }else{
-      viewMode === 'list' ? listView() : gridView()
-      document.getElementById('multiselect-actions').remove()
+      exitMultiselect()
     }
-    multiselect.classList.toggle('active-view')
   }
   
   let multiselect = document.getElementById('multi-select')
@@ -601,6 +600,7 @@ function listView(){
 
     selectListRender()
   }else{
+
     Array.from(toggleView).forEach((el)=>{
       el.classList.remove('active-view')})
 
@@ -620,7 +620,6 @@ function gridView(){
   const listView = toggleView[0]
 
   if(selectMode){
-    document.getElementById('multiselect-actions').remove()
 
     localStorage.setItem('viewMode', 'grid')
     loanContainer.classList.replace('list', 'grid')
@@ -665,8 +664,9 @@ function exitMultiselect(){
   let viewMode = localStorage.getItem('viewMode')
   selectedItemsArray = null
   selectMode=false;
-  document.getElementById('multiselect-actions').remove()
-  document.getElementById('multi-select').classList.toggle('active-view')
+  document.getElementById('multi-select').classList.remove('active-view')
+  console.log('line has run')
+  document.getElementById('multiselect-actions') ? document.getElementById('multiselect-actions').remove() : null;
   viewMode === 'list' ? listView() : gridView()
 
 }
@@ -691,7 +691,7 @@ function deleteMultiselect(){
     viewMode === 'list' ? listView() : gridView()
 
     document.getElementById('multiselect-actions').remove()
-    document.getElementById('multi-select').classList.toggle('active-view')
+    document.getElementById('multi-select').classList.remove('active-view')
   }else{
     let counter = document.getElementById('selected-count')
 
@@ -753,11 +753,13 @@ function selectGridRender(){
 
     loanContainer.insertAdjacentHTML(`beforeend`, HTMLString)//insert after last item
 
-    if(selectedItemsArray){}//Preserve selections going from list to grid view
+    if(selectedItemsArray && selectedItemsArray.includes(`group-${id}`)){//Preserve selections going from list to grid view
+      document.getElementById(`group-${id}`).classList.add('selected')
+    }
 
     let element = document.getElementById(`group-${id}`)//reference the recently added item
     let selectHandler = ()=>{
-      selectGridItem(element)//pass the this element to the function
+      selectGridItem(element)//pass the recent element to the function
     }
     element.addEventListener('click', selectHandler)//add a listener, make it selectable
   })
@@ -767,7 +769,7 @@ function selectGridRender(){
   <ul id='multiselect-actions'>
       <li id='exit-multiselect'>Cancel</li>
       <li id="delete-multiselect" disabled>Delete</li>
-      <li id="selected-count"> 0 selected</li>
+      <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0} selected</li>
   </ul>`
   utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar
   document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
@@ -814,6 +816,13 @@ function selectListRender(){
         </td>
       </tr>`
       loanList.insertAdjacentHTML('beforeend', HTMLString)
+
+      if(selectedItemsArray && selectedItemsArray.includes(`group-${id}`)){
+        let row = document.getElementById(`group-${id}`)
+        let checkbox = row.querySelector('.checkbox')
+        checkbox.checked = !checkbox.checked
+        row.classList.toggle('selected', checkbox.checked)
+      }
     })
 
     let selectHandler = (e)=>{
@@ -840,7 +849,7 @@ function selectListRender(){
     <ul id='multiselect-actions'>
         <li id='exit-multiselect'>Cancel</li>
         <li id="delete-multiselect" disabled>Delete</li>
-        <li id="selected-count"> 0 selected</li>
+        <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0} selected</li>
     </ul>`
     utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar
     document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
