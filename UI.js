@@ -8,6 +8,7 @@ const utilities = document.getElementById('utilities')
 let selectedItemsArray = null
 let selectMode = false;
 let countElement
+let allSelected = false
 
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {}
@@ -701,6 +702,33 @@ function deleteMultiselect(){
   }
 }
 
+function selectAll(){
+  let allCards = allSelected ? selectedItemsArray : document.querySelectorAll('.loans')//gather all loan items
+
+  if(!selectedItemsArray) selectedItemsArray = [];//If the array doesn't exist create it
+
+  allSelected = !allSelected
+
+  // if(allSelected){
+  //   document.getElementById('select-all').checked = allSelected//In listView, toggle checkmarks
+  //   allCards.forEach((card)=>{
+  //     card.classList.toggle('selected', allSelected)//add selected class if allSelected == true
+  //     selectedItemsArray.push(card.id)})//add the item to the selected array
+  // }else{
+  //   viewMode == 'list' ? document.getElementById('select-all').checked = allSelected : null
+  //   allCards.forEach((card)=>{
+  //     card.classList.toggle('selected', allSelected)
+  //     selectedItemsArray = selectedItemsArray.filter(i => i != card.id)
+  //   })
+  // }
+
+  viewMode == 'list' ? document.getElementById('select-all').checked = selectAll : null//toggles checkmarks, based on whether the are selecting or unselecting in listMode
+  allCards.forEach((card)=>{
+    card.classList.toggle('selected')
+    allSelected ? selectedItemsArray.push(card.id) : null//Fix the toggling based on whether we are unselecting or selecting all
+
+  })
+}
 function selectGridItem(element){
   if(!selectedItemsArray){
     selectedItemsArray = []
@@ -859,6 +887,7 @@ function selectListRender(){
     utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar  
   }else{
     utilities.insertAdjacentHTML('beforeend', HTMLString)}//insert at the end of the toolbar
+
   document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
   document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)
 }
