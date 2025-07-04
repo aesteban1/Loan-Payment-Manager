@@ -103,8 +103,10 @@ h1{
 
 #multiselect-actions{
   gap: 1rem;
+  font-weight: bold;
   #exit-multiselect,
-  #delete-multiselect{
+  #delete-multiselect,
+  #all-multiselect{
     background-color: #707070;
     padding: 8px;
     border-radius: 5px;
@@ -116,12 +118,19 @@ h1{
     cursor: default;
   }
 
+  #all-multiselect:hover{
+    background-color: #825dff;
+
+  }
+
   #delete-multiselect:hover{
     background-color: #ed5e68;
+    color: #000000;
   }
 
   #exit-multiselect:hover{
     background-color: #505050;
+    color: #ffffff;
   }
 }
 

@@ -703,32 +703,34 @@ function deleteMultiselect(){
 }
 
 function selectAll(){
-  let allCards = allSelected ? selectedItemsArray : document.querySelectorAll('.loans')//gather all loan items
-
+  //If initial 'allSelected' value is false we can assume we are adding all items, if initial value is true was are removing all items
+  let allCards = allSelected ? selectedItemsArray : document.querySelectorAll('.loan')//gather all loan items
+  console.log(allCards)
   if(!selectedItemsArray) selectedItemsArray = [];//If the array doesn't exist create it
 
   allSelected = !allSelected
 
-  // if(allSelected){
-  //   document.getElementById('select-all').checked = allSelected//In listView, toggle checkmarks
-  //   allCards.forEach((card)=>{
-  //     card.classList.toggle('selected', allSelected)//add selected class if allSelected == true
-  //     selectedItemsArray.push(card.id)})//add the item to the selected array
-  // }else{
-  //   viewMode == 'list' ? document.getElementById('select-all').checked = allSelected : null
-  //   allCards.forEach((card)=>{
-  //     card.classList.toggle('selected', allSelected)
-  //     selectedItemsArray = selectedItemsArray.filter(i => i != card.id)
-  //   })
-  // }
-
-  viewMode == 'list' ? document.getElementById('select-all').checked = selectAll : null//toggles checkmarks, based on whether the are selecting or unselecting in listMode
+  let viewMode = localStorage.getItem('viewMode')
+  let item;
+  viewMode === 'list' ? document.getElementById('select-all').checked = selectAll : null//toggles master checkmark, based on whether the are selecting or unselecting in listMode
   allCards.forEach((card)=>{
-    card.classList.toggle('selected')
-    allSelected ? selectedItemsArray.push(card.id) : null//Fix the toggling based on whether we are unselecting or selecting all
-
+    if(allSelected){
+      selectedItemsArray.push(card.id)
+      card.querySelector('.checkbox').checked = true
+      card.classList.add('selected')
+    }else{
+      item = document.getElementById(`${card}`)
+      item.classList.remove('selected')
+      item.querySelector(`.checkbox`).checked = allSelected;
+      document.getElementById('select-all').checked = allSelected
+    }
   })
+  if(!allSelected){
+    selectedItemsArray=null;
+    allCards=[]
+  }
 }
+
 function selectGridItem(element){
   if(!selectedItemsArray){
     selectedItemsArray = []
@@ -877,6 +879,7 @@ function selectListRender(){
   //after all items are added, inject the tool actions
   HTMLString = `
   <ul id='multiselect-actions'>
+      <li id='all-multiselect'>Select All</li>
       <li id='exit-multiselect'>Cancel</li>
       <li id="delete-multiselect" disabled>Delete</li>
       <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0} selected</li>
@@ -890,6 +893,7 @@ function selectListRender(){
 
   document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
   document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)
+  document.getElementById('all-multiselect').addEventListener('click', selectAll)
 }
 
 //reload all local storage data to the display field

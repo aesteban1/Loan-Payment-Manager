@@ -105,9 +105,11 @@ h1 {
 
 #multiselect-actions {
   gap: 1rem;
+  font-weight: bold;
 }
 #multiselect-actions #exit-multiselect,
-#multiselect-actions #delete-multiselect {
+#multiselect-actions #delete-multiselect,
+#multiselect-actions #all-multiselect {
   background-color: #707070;
   padding: 8px;
   border-radius: 5px;
@@ -118,11 +120,16 @@ h1 {
   align-content: center;
   cursor: default;
 }
+#multiselect-actions #all-multiselect:hover {
+  background-color: #825dff;
+}
 #multiselect-actions #delete-multiselect:hover {
   background-color: #ed5e68;
+  color: #000000;
 }
 #multiselect-actions #exit-multiselect:hover {
   background-color: #505050;
+  color: #ffffff;
 }
 
 @keyframes noSelection {
