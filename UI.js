@@ -1,101 +1,114 @@
-const loanContainer = document.querySelector('.loan-container')
-const updateLoansBtn = document.getElementById('update-loans')
-const viewToggleContainer = document.getElementById('view-toggle')
-const toolsContainer = document.getElementById('tools')
-const backdrop = document.getElementById('overlay')
-const modal = document.getElementById('blank-modal')
-const utilities = document.getElementById('utilities')
-let selectedItemsArray = null
+const elements = {
+  loanContainer:document.querySelector(".loan-container"),
+  modal:document.getElementById("blank-modal"),
+  backdrop:document.getElementById("overlay"),
+  utilities: document.getElementById('utilities'),
+  toolsContainer:document.getElementById('tools'),
+  updateLoansBtn:document.getElementById('update-loans'),
+  viewToggleContainer:document.getElementById('view-toggle') 
+}
+let selectedItemsArray = null;
 let selectMode = false;
-let countElement
-let allSelected = false
+let countElement;
+let allSelected = false;
 
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
-let currentData = {}
+let currentData = {};
 
-function toolListeners(){
-  let selectListener = ()=>{
-    let viewMode = localStorage.getItem('viewMode')
-    if(!multiselect.classList.contains('active-view')){
-      viewMode === 'list' ? selectListRender() : selectGridRender()
-      multiselect.classList.add('active-view')
-    }else{
-      exitMultiselect()
+function toolListeners() {
+  let selectListener = () => {
+    let viewMode = localStorage.getItem("viewMode");
+    if (!multiselect.classList.contains("active-view")) {
+      viewMode === "list" ? selectListRender() : selectGridRender();
+      multiselect.classList.add("active-view");
+    } else {
+      exitMultiselect();
     }
-  }
-  
-  let multiselect = document.getElementById('multi-select')
-  multiselect.addEventListener('click', selectListener)
+  };
+
+  let multiselect = document.getElementById("multi-select");
+  multiselect.addEventListener("click", selectListener);
 }
 
-function viewListeners(){
-  let listViewHandler = ()=>{listView()}
-  let gridViewHandler = ()=>{gridView()}
+function viewListeners() {
+  let listViewHandler = () => {
+    listView();
+  };
+  let gridViewHandler = () => {
+    gridView();
+  };
 
-  if(localStorage.getItem('viewMode') === 'list'){
-    listView()
-  }else{
-    gridView()
+  if (localStorage.getItem("viewMode") === "list") {
+    listView();
+  } else {
+    gridView();
   }
 
-  Array.from(viewToggleContainer.children).forEach((child)=>{
-    if(child.id === 'list-view'){
-      child.addEventListener('click', listViewHandler)
-    }else{
-      child.addEventListener('click', gridViewHandler)}
-  })
+  Array.from(viewToggleContainer.children).forEach((child) => {
+    if (child.id === "list-view") {
+      child.addEventListener("click", listViewHandler);
+    } else {
+      child.addEventListener("click", gridViewHandler);
+    }
+  });
 }
 //Creates new id for a new list item
-function newListEntry(){
-  let identifier = Date.now()
+function newListEntry() {
+  let identifier = Date.now();
   openNewModal(identifier);
 }
 //creates new id for  a new grid item
-function newGridEntry(){
+function newGridEntry() {
   let number = Date.now();
-  openNewModal(number)
+  openNewModal(number);
 }
 //All HTML onclick should be turned to JS eventListeners. Little at a time.
-function openEditModal(dataObj){
-  let UpdatedDataObj
-  
-  let editHandler = (e)=>{
-    e.preventDefault()
-    const formData = new FormData(modal)
+function openEditModal(dataObj) {
+  let UpdatedDataObj;
 
-    UpdatedDataObj ={
-      id:dataObj.id,
-      loanName: formData.get('loanName') || dataObj.id,
-      balance:formData.get('loanBalance') || 0,
-      rate:formData.get('loanRate') || 0,
-      minPayment: formData.get('loanMin') || 0,
-      order:formData.get('payment order'),
-      loanType: formData.get('loan type') || 'personal loan'
+  let editHandler = (e) => {
+    e.preventDefault();
+    const formData = new FormData(modal);
+
+    UpdatedDataObj = {
+      id: dataObj.id,
+      loanName: formData.get("loanName") || dataObj.id,
+      balance: formData.get("loanBalance") || 0,
+      rate: formData.get("loanRate") || 0,
+      minPayment: formData.get("loanMin") || 0,
+      order: formData.get("payment order"),
+      loanType: formData.get("loan type") || "personal loan",
+    };
+
+    updateLocalStorage(UpdatedDataObj);
+
+    if (localStorage.getItem("viewMode") === "list") {
+      updateListItem(
+        document.getElementById(`group-${dataObj.id}`),
+        UpdatedDataObj
+      );
+    } else {
+      updateGridItem(
+        document.getElementById(`group-${dataObj.id}`),
+        UpdatedDataObj
+      );
     }
 
-    updateLocalStorage(UpdatedDataObj)
+    modal.removeEventListener("submit", editHandler);
+  };
 
-    if(localStorage.getItem('viewMode') === 'list'){
-      updateListItem(document.getElementById(`group-${dataObj.id}`), UpdatedDataObj)
-    }else{
-      updateGridItem(document.getElementById(`group-${dataObj.id}`), UpdatedDataObj)
-    }
+  let cancelEdit = () => {
+    modal.innerHTML = "";
+    modal.removeEventListener("submit", editHandler);
+    modal.style.visibility = "hidden";
+    backdrop.style.visibility = "hidden";
 
-    modal.removeEventListener('submit', editHandler)
-  }
+    modal.removeEventListener("submit", editHandler);
+  };
 
-  let cancelEdit = ()=>{
-    modal.innerHTML=''
-    modal.removeEventListener('submit', editHandler)
-    modal.style.visibility='hidden'
-    backdrop.style.visibility='hidden'
-
-    modal.removeEventListener('submit', editHandler)
-  }
-
-  let deleteHandler = ()=>{
-    deleteEntry(dataObj.id)
-  }
+  let deleteHandler = () => {
+    deleteEntry(dataObj.id);
+  };
 
   modal.innerHTML = `
       <span>Edit Existing Entry</span>
@@ -129,54 +142,54 @@ function openEditModal(dataObj){
         <button id="editModalDelete-${dataObj.id}"  class='delete-btn' type="button">Delete</button>
         <button id="editModalCancel-${dataObj.id}" class="cancel-btn">Cancel</button>
         <button form="blank-modal" type="submit" id="editModalConfirm" class="confirm-btn">Update</button>
-      </div>`
+      </div>`;
 
-      const cancelButton = document.getElementById(`editModalCancel-${dataObj.id}`)
-      const deleteButton = document.getElementById(`editModalDelete-${dataObj.id}`)
-      modal.style.visibility='visible'
-      backdrop.style.visibility='visible'
+  const cancelButton = document.getElementById(`editModalCancel-${dataObj.id}`);
+  const deleteButton = document.getElementById(`editModalDelete-${dataObj.id}`);
+  modal.style.visibility = "visible";
+  backdrop.style.visibility = "visible";
 
-      deleteButton.addEventListener('click', deleteHandler)
-      cancelButton.addEventListener('click', cancelEdit)
-      modal.addEventListener('submit', editHandler)
+  deleteButton.addEventListener("click", deleteHandler);
+  cancelButton.addEventListener("click", cancelEdit);
+  modal.addEventListener("submit", editHandler);
 }
 
-function openNewModal(identifier){
-  let newDataObj
+function openNewModal(identifier) {
+  let newDataObj;
 
-  let handler = (e)=>{
-    e.preventDefault()
-    const formData = new FormData(modal)
+  let handler = (e) => {
+    e.preventDefault();
+    const formData = new FormData(modal);
 
     //Need to pass 'identifier' to the handler, so the event listener should be a paramenter function.
     //Use a function with a reference to call the handler function with parameters
     newDataObj = {
-      id:identifier,
-      loanName: formData.get('loanName') || identifier,
-      balance:formData.get('loanBalance') || 0,
-      rate:formData.get('loanRate') || 0,
-      minPayment: formData.get('loanMin') || 0,
-      order:formData.get('payment order'),
-      loanType: null
+      id: identifier,
+      loanName: formData.get("loanName") || identifier,
+      balance: formData.get("loanBalance") || 0,
+      rate: formData.get("loanRate") || 0,
+      minPayment: formData.get("loanMin") || 0,
+      order: formData.get("payment order"),
+      loanType: null,
+    };
+
+    updateLocalStorage(newDataObj);
+
+    if (localStorage.getItem("viewMode") === "list") {
+      addToList(document.getElementById("loan-List"), newDataObj);
+    } else {
+      addToGrid(loanContainer, newDataObj);
     }
-  
-    updateLocalStorage(newDataObj)
 
-    if(localStorage.getItem('viewMode') === 'list'){
-      addToList(document.getElementById('loan-List'), newDataObj)
-    }else{
-      addToGrid(loanContainer, newDataObj)
-    }
+    modal.removeEventListener("submit", handler);
+  };
 
-    modal.removeEventListener('submit', handler)
-  }
-
-  let cancelEntry = ()=>{
-    modal.innerHTML=''
-    modal.removeEventListener('submit', handler)
-    modal.style.visibility="hidden"
-    backdrop.style.visibility="hidden"
-  }
+  let cancelEntry = () => {
+    modal.innerHTML = "";
+    modal.removeEventListener("submit", handler);
+    modal.style.visibility = "hidden";
+    backdrop.style.visibility = "hidden";
+  };
 
   modal.innerHTML = `
       <span>Create A New Entry</span>
@@ -210,27 +223,27 @@ function openNewModal(identifier){
         <button id="newModalCancel-${identifier}" class="cancel-btn">Cancel</button>
         <button form="blank-modal" type="submit" id="newModalConfirm" class="confirm-btn">Confirm</button>
       </div>`;
-  modal.style.visibility= 'visible';
-  backdrop.style.visibility='visible';
+  modal.style.visibility = "visible";
+  backdrop.style.visibility = "visible";
 
-  const cancelButton = document.getElementById(`newModalCancel-${identifier}`)
-  cancelButton.addEventListener('click', cancelEntry)
-  modal.addEventListener('submit', handler)
+  const cancelButton = document.getElementById(`newModalCancel-${identifier}`);
+  cancelButton.addEventListener("click", cancelEntry);
+  modal.addEventListener("submit", handler);
 }
 
 //Displays the user input as regular text
-function addToList(loanListContainer, dataObj){
-  updateLocalStorage(dataObj)
+function addToList(loanListContainer, dataObj) {
+  updateLocalStorage(dataObj);
 
-  let openHandler = ()=>{
-    openEditModal(dataObj)
-  }
-  let deleteHandler = ()=>{
-    deleteEntry(dataObj.id)
-  }
-  let dropDownHandler = ()=>{
-    dropDown(dataObj.id)
-  }
+  let openHandler = () => {
+    openEditModal(dataObj);
+  };
+  let deleteHandler = () => {
+    deleteEntry(dataObj.id);
+  };
+  let dropDownHandler = () => {
+    dropDown(dataObj.id);
+  };
 
   let HTMLString = `
   <tr class="loan" id="group-${dataObj.id}">
@@ -243,27 +256,35 @@ function addToList(loanListContainer, dataObj){
       <div class="dropdown">
         <button class="arrow" id='dropDownMenu-${dataObj.id}'></button>
         <ul class="dropdown-content">
-          <li><button id="edit-${dataObj.id}" class="edit-btn menu-item">Edit</button></li>
-          <li><button id="delete-${dataObj.id}" class="delete-btn menu-item">Delete</button></li>
+          <li><button id="edit-${dataObj.id
+    }" class="edit-btn menu-item">Edit</button></li>
+          <li><button id="delete-${dataObj.id
+    }" class="delete-btn menu-item">Delete</button></li>
         </ul>
       </div>
     </td>
-  </tr>`
+  </tr>`;
 
-  loanListContainer.insertAdjacentHTML('beforeend', HTMLString)
+  loanListContainer.insertAdjacentHTML("beforeend", HTMLString);
 
-  document.getElementById(`edit-${dataObj.id}`).addEventListener('click', openHandler)
-  document.getElementById(`delete-${dataObj.id}`).addEventListener('click',deleteHandler)
-  document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
+  document
+    .getElementById(`edit-${dataObj.id}`)
+    .addEventListener("click", openHandler);
+  document
+    .getElementById(`delete-${dataObj.id}`)
+    .addEventListener("click", deleteHandler);
+  document
+    .getElementById(`dropDownMenu-${dataObj.id}`)
+    .addEventListener("click", dropDownHandler);
 
-  modal.innerHTML=''
-  modal.style.visibility ='hidden'
-  backdrop.style.visibility='hidden'
+  modal.innerHTML = "";
+  modal.style.visibility = "hidden";
+  backdrop.style.visibility = "hidden";
 }
 
 //Renders loan container as a list view from user data
-function updateList(){
-  loanContainer.innerHTML =`
+function updateList() {
+  loanContainer.innerHTML = `
     <table id="loan-List">
       <tr id="header">
         <th>Loan Name</th>
@@ -272,15 +293,14 @@ function updateList(){
         <th>Minimum Payment</th>
         <th>Payment Order</th>
       </tr>
-    </table>`
+    </table>`;
 
-  let loanList = document.getElementById('loan-List')
+  let loanList = document.getElementById("loan-List");
 
-  loanData.forEach(
-    (dataObj) =>{
-      let {id, loanName, balance, rate, minPayment, order} = dataObj
+  loanData.forEach((dataObj) => {
+    let { id, loanName, balance, rate, minPayment, order } = dataObj;
 
-      loanList.innerHTML += `
+    loanList.innerHTML += `
       <tr class="loan" id = 'group-${id}'>
         <td>${loanName}</td>
         <td>$${Number.parseFloat(balance).toFixed(2)}</td>
@@ -296,46 +316,51 @@ function updateList(){
             </ul>
           </div>
         </td>
-      </tr>`
+      </tr>`;
+  });
 
-    })
+  loanData.forEach((dataObj) => {
+    let editHandler = () => {
+      openEditModal(dataObj);
+    };
 
-    loanData.forEach(
-      (dataObj)=>{
+    let deleteHandler = () => {
+      deleteEntry(dataObj.id);
+    };
 
-        let editHandler = ()=>{
-          openEditModal(dataObj)
-        }
+    let dropDownHandler = () => {
+      dropDown(dataObj.id);
+    };
 
-        let deleteHandler = ()=>{
-          deleteEntry(dataObj.id)
-        }
-
-        let dropDownHandler = ()=>{
-          dropDown(dataObj.id)
-        }
-
-        document.getElementById(`edit-${dataObj.id}`).addEventListener('click',editHandler)
-        document.getElementById(`delete-${dataObj.id}`).addEventListener('click',deleteHandler)
-        document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
-      }
-    )
-  loanContainer.insertAdjacentHTML("beforeend", '<button id="add-entry" onclick="newListEntry()"><span class="note">Add New Entry</span>+</button>')
+    document
+      .getElementById(`edit-${dataObj.id}`)
+      .addEventListener("click", editHandler);
+    document
+      .getElementById(`delete-${dataObj.id}`)
+      .addEventListener("click", deleteHandler);
+    document
+      .getElementById(`dropDownMenu-${dataObj.id}`)
+      .addEventListener("click", dropDownHandler);
+  });
+  loanContainer.insertAdjacentHTML(
+    "beforeend",
+    '<button id="add-entry" onclick="newListEntry()"><span class="note">Add New Entry</span>+</button>'
+  );
 }
 
 //displays editable data within in an open modal
-function updateListItem(loanEl, dataObj){
-  openHandler =()=>{
-    openEditModal(dataObj)
-  }
+function updateListItem(loanEl, dataObj) {
+  let openHandler = () => {
+    openEditModal(dataObj);
+  };
 
-  let deleteHandler = ()=>{
-    deleteEntry(dataObj.id)
-  }
+  let deleteHandler = () => {
+    deleteEntry(dataObj.id);
+  };
 
-  let dropDownHandler = ()=>{
-    dropDown(dataObj.id)
-  }
+  let dropDownHandler = () => {
+    dropDown(dataObj.id);
+  };
 
   loanEl.innerHTML = `
     <td>${dataObj.loanName}</td>
@@ -347,41 +372,50 @@ function updateListItem(loanEl, dataObj){
       <div class="dropdown">
         <button class="arrow" id='dropDownMenu-${dataObj.id}'></button>
         <ul class="dropdown-content">
-          <li><button class="edit-btn menu-item" id='edit-${dataObj.id}'>Edit</button></li>
-          <li><button class="delete-btn menu-item" id='delete-${dataObj.id}'>Delete</button></li>
+          <li><button class="edit-btn menu-item" id='edit-${dataObj.id
+    }'>Edit</button></li>
+          <li><button class="delete-btn menu-item" id='delete-${dataObj.id
+    }'>Delete</button></li>
         </ul>
       </div>
-    </td>`
+    </td>`;
 
-    document.getElementById(`edit-${dataObj.id}`).addEventListener('click', openHandler)
-    document.getElementById(`delete-${dataObj.id}`).addEventListener('click',deleteHandler)
-    document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
+  document
+    .getElementById(`edit-${dataObj.id}`)
+    .addEventListener("click", openHandler);
+  document
+    .getElementById(`delete-${dataObj.id}`)
+    .addEventListener("click", deleteHandler);
+  document
+    .getElementById(`dropDownMenu-${dataObj.id}`)
+    .addEventListener("click", dropDownHandler);
 
-    modal.innerHTML=''
-    backdrop.style.visibility="hidden"
-    modal.style.visibility="hidden"
+  modal.innerHTML = "";
+  backdrop.style.visibility = "hidden";
+  modal.style.visibility = "hidden";
 }
 
 //Adds an item to the GRID
-function addToGrid(container, dataObj){
+function addToGrid(container, dataObj) {
+  let openHandler = () => {
+    openEditModal(dataObj);
+  };
+  let deleteHandler = () => {
+    deleteEntry(dataObj.id);
+  };
+  let dropDownHandler = () => {
+    dropDown(dataObj.id);
+  };
 
-  let openHandler = ()=>{
-    openEditModal(dataObj)
-  }
-  let deleteHandler = ()=>{
-    deleteEntry(dataObj.id)
-  }
-  let dropDownHandler = ()=>{
-    dropDown(dataObj.id)
-  }
-
-  let HTMLString= `
+  let HTMLString = `
   <div class="loan" id="group-${dataObj.id}">
     <div class="dropdown">
       <button id='dropDownMenu-${dataObj.id}' class="arrow"></button>
       <ul class="dropdown-content">
-        <li><button id='edit-${dataObj.id}' class="edit-btn menu-item">Edit</button></li>
-        <li><button id='delete-${dataObj.id}' class="delete-btn menu-item">Delete</button></li>
+        <li><button id='edit-${dataObj.id
+    }' class="edit-btn menu-item">Edit</button></li>
+        <li><button id='delete-${dataObj.id
+    }' class="delete-btn menu-item">Delete</button></li>
       </ul>
     </div>
     <span><strong>Loan Name:</strong></span>
@@ -394,24 +428,32 @@ function addToGrid(container, dataObj){
     <p>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</p>
     <span><strong>Payment Order: </strong></span>
     <p>${dataObj.order}</p>
-  </div>`
+  </div>`;
 
-  document.getElementById('add-entry').insertAdjacentHTML('beforebegin', HTMLString)
+  document
+    .getElementById("add-entry")
+    .insertAdjacentHTML("beforebegin", HTMLString);
 
-  document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
-  document.getElementById(`edit-${dataObj.id}`).addEventListener('click', openHandler)
-  document.getElementById(`delete-${dataObj.id}`).addEventListener('click', deleteHandler)
+  document
+    .getElementById(`dropDownMenu-${dataObj.id}`)
+    .addEventListener("click", dropDownHandler);
+  document
+    .getElementById(`edit-${dataObj.id}`)
+    .addEventListener("click", openHandler);
+  document
+    .getElementById(`delete-${dataObj.id}`)
+    .addEventListener("click", deleteHandler);
 
-  modal.innerHTML=''
-  modal.style.visibility ='hidden'
-  backdrop.style.visibility='hidden'
+  modal.innerHTML = "";
+  modal.style.visibility = "hidden";
+  backdrop.style.visibility = "hidden";
 }
 
 //Updates the GRID with the most recent data
-function updateGrid(){
-  loanContainer.innerHTML=``
+function updateGrid() {
+  loanContainer.innerHTML = ``;
   loanData.forEach(
-    ({id, loanName, balance, rate, minPayment, order, loanType}) => {
+    ({ id, loanName, balance, rate, minPayment, order, loanType }) => {
       loanContainer.innerHTML += `
       <div class="loan" id="group-${id}">
         <div class="dropdown">
@@ -431,48 +473,58 @@ function updateGrid(){
         <p>$${Number.parseFloat(minPayment).toFixed(2)}</p>
         <span><strong>Payment Order</strong></span>
         <p>${order}</p>
-      </div>`
-    });
-
-  loanContainer.insertAdjacentHTML('beforeend',`<button id="add-entry" onclick="newGridEntry()">+</button>`)
-
-  loanData.forEach(
-  (dataObj)=>{
-    let openHandler = ()=>{
-      openEditModal(dataObj)
+      </div>`;
     }
+  );
 
-    let deleteHandler = ()=>{
-      deleteEntry(dataObj.id)
-    }
+  loanContainer.insertAdjacentHTML(
+    "beforeend",
+    `<button id="add-entry" onclick="newGridEntry()">+</button>`
+  );
 
-    let dropDownHandler = ()=>{
-      dropDown(dataObj.id)
-    }
-    document.getElementById(`edit-${dataObj.id}`).addEventListener('click',openHandler)
-    document.getElementById(`delete-${dataObj.id}`).addEventListener('click',deleteHandler)
-    document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
-  })
+  loanData.forEach((dataObj) => {
+    let openHandler = () => {
+      openEditModal(dataObj);
+    };
+
+    let deleteHandler = () => {
+      deleteEntry(dataObj.id);
+    };
+
+    let dropDownHandler = () => {
+      dropDown(dataObj.id);
+    };
+    document
+      .getElementById(`edit-${dataObj.id}`)
+      .addEventListener("click", openHandler);
+    document
+      .getElementById(`delete-${dataObj.id}`)
+      .addEventListener("click", deleteHandler);
+    document
+      .getElementById(`dropDownMenu-${dataObj.id}`)
+      .addEventListener("click", dropDownHandler);
+  });
 }
 
-function updateGridItem(loanEl, dataObj){
-  let openHandler = ()=>{
-    openEditModal(dataObj)
-  }
-  let deleteHandler = ()=>{
-    deleteEntry(dataObj.id)
-  }
-  let dropDownHandler = ()=>{
-    dropDown(dataObj.id)
-  }
+function updateGridItem(loanEl, dataObj) {
+  let openHandler = () => {
+    openEditModal(dataObj);
+  };
+  let deleteHandler = () => {
+    deleteEntry(dataObj.id);
+  };
+  let dropDownHandler = () => {
+    dropDown(dataObj.id);
+  };
 
-
-  loanEl.innerHTML =`
+  loanEl.innerHTML = `
     <div class="dropdown">
       <button id='dropDownMenu-${dataObj.id}' class="arrow"></button>
       <ul class="dropdown-content">
-        <li><button id='edit-${dataObj.id}' class="edit-btn menu-item">Edit</button></li>
-        <li><button id='delete-${dataObj.id}' class="delete-btn menu-item">Delete</button></li>
+        <li><button id='edit-${dataObj.id
+    }' class="edit-btn menu-item">Edit</button></li>
+        <li><button id='delete-${dataObj.id
+    }' class="delete-btn menu-item">Delete</button></li>
       </ul>
     </div>
     <span><strong>Loan Name:</strong></span>
@@ -483,290 +535,319 @@ function updateGridItem(loanEl, dataObj){
     <p>${Number.parseFloat(dataObj.rate).toFixed(2)}%</p>
     <span><strong>Minimum Payment: </strong></span>
     <p>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</p>
-    <span><strong>Payment Order</strong><span>
-    <p>${dataObj.order}</p>`
+    <span><strong>Payment Order</strong></span>
+    <p>${dataObj.order}</p>`;
 
-  document.getElementById(`dropDownMenu-${dataObj.id}`).addEventListener('click', dropDownHandler)
-  document.getElementById(`edit-${dataObj.id}`).addEventListener('click', openHandler)
-  document.getElementById(`delete-${dataObj.id}`).addEventListener('click', deleteHandler)
+  document
+    .getElementById(`dropDownMenu-${dataObj.id}`)
+    .addEventListener("click", dropDownHandler);
+  document
+    .getElementById(`edit-${dataObj.id}`)
+    .addEventListener("click", openHandler);
+  document
+    .getElementById(`delete-${dataObj.id}`)
+    .addEventListener("click", deleteHandler);
 
-  modal.innerHTML=''
-  modal.style.visibility ='hidden'
-  backdrop.style.visibility='hidden'
+  modal.innerHTML = "";
+  modal.style.visibility = "hidden";
+  backdrop.style.visibility = "hidden";
 }
 
 //Confirmation, populates data to local storage for future use
-function updateLocalStorage(dataObj){
-  const dataArrIndex = loanData.findIndex((item)=>item.id === dataObj.id)
+function updateLocalStorage(dataObj) {
+  const dataArrIndex = loanData.findIndex((item) => item.id === dataObj.id);
 
   //save the data object
-  if(dataArrIndex === -1){
-    loanData.push(dataObj)
-  }else{
-    loanData[dataArrIndex] = dataObj
+  if (dataArrIndex === -1) {
+    loanData.push(dataObj);
+  } else {
+    loanData[dataArrIndex] = dataObj;
   }
 
   //Update Local storage with updated data array
-  localStorage.setItem("LPMdata", JSON.stringify(loanData))
+  localStorage.setItem("LPMdata", JSON.stringify(loanData));
 }
 
 //Display user input as inline text
-function updateLoanContainer(){
-  loanContainer.innerHTML="";
-  if(loanContainer.classList.contains('list')){
-    updateList()
-  }else{
-    updateGrid()
+function updateLoanContainer() {
+  loanContainer.innerHTML = "";
+  if (loanContainer.classList.contains("list")) {
+    updateList();
+  } else {
+    updateGrid();
   }
 
-  document.addEventListener('click',(e)=>{
-    if(!e.target.closest('.dropdown')){
-      document.querySelectorAll('.arrow').forEach((el)=>{
-        el.classList.remove('active')
-      })
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".dropdown")) {
+      document.querySelectorAll(".arrow").forEach((el) => {
+        el.classList.remove("active");
+      });
     }
-  })
+  });
 }
 
 //cancel entry, deletes added container
-function cancelEntry(){
-  modal.removeEventListener('submit', handler)
-  modal.innerHTML=''
-  modal.style.visibility = 'hidden'
-  backdrop.style.visibility = 'hidden'
+function cancelEntry() {
+  modal.removeEventListener("submit", handler);
+  modal.innerHTML = "";
+  modal.style.visibility = "hidden";
+  backdrop.style.visibility = "hidden";
 }
 
 //deletes current container
-function deleteEntry(id){
+function deleteEntry(id) {
   let HTMLString = `
   <dialog id='confirm-modal'>Delete Entry?
     <div>
       <button id='no-btn'>Cancel</button>
       <button id='yes-btn'>Delete</button>
     </div>
-  </dialog>`
-  modal.insertAdjacentHTML('beforebegin', HTMLString)
+  </dialog>`;
+  modal.insertAdjacentHTML("beforebegin", HTMLString);
 
-  let confirmModal = document.getElementById('confirm-modal')
-  let container
+  let confirmModal = document.getElementById("confirm-modal");
+  let container;
 
+  backdrop.style.visibility = "visible";
+  confirmModal.showModal();
 
-  backdrop.style.visibility = 'visible'
-  confirmModal.showModal()
-
-  let cancelDelete = ()=>{
-    document.getElementById('confirm-modal').style.visibility = 'hidden'
-    confirmModal.close()
-    if(modal.style.visibility !== 'visible'){
-      backdrop.style.visibility='hidden'
+  let cancelDelete = () => {
+    document.getElementById("confirm-modal").style.visibility = "hidden";
+    confirmModal.close();
+    if (modal.style.visibility !== "visible") {
+      backdrop.style.visibility = "hidden";
     }
-    confirmModal.remove()
-  }
+    confirmModal.remove();
+  };
 
-  let confirmDelete = ()=>{
-    if(localStorage.getItem('viewMode') === 'list'){
-      container = document.getElementById(`group-${id}`).parentElement
-    }else{
-      container = document.getElementById(`group-${id}`)
+  let confirmDelete = () => {
+    if (localStorage.getItem("viewMode") === "list") {
+      container = document.getElementById(`group-${id}`).parentElement;
+    } else {
+      container = document.getElementById(`group-${id}`);
     }
 
-    let dataArrIndex = loanData.findIndex((item)=>
-      item.id === id
-    );
+    let dataArrIndex = loanData.findIndex((item) => item.id === id);
     container.remove();
     loanData.splice(dataArrIndex, 1);
-    localStorage.setItem("LPMdata", JSON.stringify(loanData))
-    modal.innerHTML=''
-    modal.style.visibility='hidden'
-    backdrop.style.visibility='hidden'
-    confirmModal.close()
-    confirmModal.remove()
-  }
+    localStorage.setItem("LPMdata", JSON.stringify(loanData));
+    modal.innerHTML = "";
+    modal.style.visibility = "hidden";
+    backdrop.style.visibility = "hidden";
+    confirmModal.close();
+    confirmModal.remove();
+  };
 
-
-  document.getElementById('no-btn').addEventListener('click', cancelDelete)
-  document.getElementById('yes-btn').addEventListener('click', confirmDelete)
+  document.getElementById("no-btn").addEventListener("click", cancelDelete);
+  document.getElementById("yes-btn").addEventListener("click", confirmDelete);
 }
 
-function listView(){
-  const toggleView = document.getElementById('view-toggle').children
-  const listView = toggleView[0]
-  const gridView = toggleView[1]
+function listView() {
+  const toggleView = document.getElementById("view-toggle").children;
+  const listView = toggleView[0];
+  const gridView = toggleView[1];
 
-  if(selectMode){
-    document.getElementById('multiselect-actions').remove()
+  if (selectMode) {
+    document.getElementById("multiselect-actions").remove();
 
-    localStorage.setItem('viewMode', 'list')
-    loanContainer.classList.replace('grid', 'list')
+    localStorage.setItem("viewMode", "list");
+    loanContainer.classList.replace("grid", "list");
 
-    selectListRender()
-  }else{
+    selectListRender();
+  } else {
+    Array.from(toggleView).forEach((el) => {
+      el.classList.remove("active-view");
+    });
 
-    Array.from(toggleView).forEach((el)=>{
-      el.classList.remove('active-view')})
-
-    if(!listView.classList.contains('active-view')){
-      loanContainer.classList.replace('grid', 'list')
-      updateList()
-      localStorage.setItem('viewMode', 'list')
+    if (!listView.classList.contains("active-view")) {
+      loanContainer.classList.replace("grid", "list");
+      updateList();
+      localStorage.setItem("viewMode", "list");
     }
   }
-  listView.classList.add('active-view')
-  gridView.classList.remove('active-view')
+  listView.classList.add("active-view");
+  gridView.classList.remove("active-view");
 }
 
-function gridView(){
-  const toggleView = document.getElementById('view-toggle').children
-  const gridView = toggleView[1]
-  const listView = toggleView[0]
+function gridView() {
+  const toggleView = document.getElementById("view-toggle").children;
+  const gridView = toggleView[1];
+  const listView = toggleView[0];
 
-  if(selectMode){
+  if (selectMode) {
+    localStorage.setItem("viewMode", "grid");
+    loanContainer.classList.replace("list", "grid");
 
-    localStorage.setItem('viewMode', 'grid')
-    loanContainer.classList.replace('list', 'grid')
+    selectGridRender();
+  } else {
+    Array.from(toggleView).forEach((el) => {
+      el.classList.remove("active-view");
+    });
 
-    selectGridRender()
-  }else{
-
-    Array.from(toggleView).forEach((el)=>{
-      el.classList.remove('active-view')})
-
-    if(!gridView.classList.contains('active-view')){
-      loanContainer.classList.replace('list', 'grid')
-      updateGrid()
-      localStorage.setItem('viewMode', 'grid')
+    if (!gridView.classList.contains("active-view")) {
+      loanContainer.classList.replace("list", "grid");
+      updateGrid();
+      localStorage.setItem("viewMode", "grid");
     }
   }
-  gridView.classList.add('active-view')
-  listView.classList.remove('active-view')
+  gridView.classList.add("active-view");
+  listView.classList.remove("active-view");
 }
 
 //Toggle the dropdown
-function dropDown(id){
-  let isOpen = document.getElementById(`dropDownMenu-${id}`).classList.contains('active')
+function dropDown(id) {
+  let isOpen = document
+    .getElementById(`dropDownMenu-${id}`)
+    .classList.contains("active");
 
-  document.querySelectorAll('.arrow').forEach((el)=>{
-    el.classList.remove('active')
-  })
+  document.querySelectorAll(".arrow").forEach((el) => {
+    el.classList.remove("active");
+  });
 
-  if(!isOpen){
-    document.getElementById(`dropDownMenu-${id}`).classList.add('active')
-  }else{
-    document.getElementById(`dropDownMenu-${id}`).classList.remove('active')
+  if (!isOpen) {
+    document.getElementById(`dropDownMenu-${id}`).classList.add("active");
+  } else {
+    document.getElementById(`dropDownMenu-${id}`).classList.remove("active");
   }
 }
 
-function exitMultiselect(){
-
-  let elements = document.querySelectorAll('.selectable')
-  elements.forEach((el)=>{
-    el.remove()
-  })
-  let viewMode = localStorage.getItem('viewMode')
-  selectedItemsArray = null
-  selectMode=false;
-  document.getElementById('multi-select').classList.remove('active-view')
-  document.getElementById('multiselect-actions') ? document.getElementById('multiselect-actions').remove() : null;
-  viewMode === 'list' ? listView() : gridView()
-
+function exitMultiselect() {
+  let listItems = document.querySelectorAll(".selectable");
+  listItems.forEach((el) => {
+    el.remove();
+  });
+  let viewMode = localStorage.getItem("viewMode");
+  selectedItemsArray = null;
+  selectMode = false;
+  document.getElementById("multi-select").classList.remove("active-view");
+  document.getElementById("multiselect-actions")
+    ? document.getElementById("multiselect-actions").remove()
+    : null;
+  viewMode === "list" ? listView() : gridView();
 }
 
-function deleteMultiselect(){
-  if(selectedItemsArray){
-    selectedItemsArray.forEach((item)=>{
-      let identifier = item.split('-')[1]
-      let dataArrIndex = loanData.findIndex((item) => {
-        item.id === identifier
-      })
+function deleteMultiselect() {
+  if (selectedItemsArray) {
+    selectedItemsArray.forEach((item) => {
+      let identifier = item.split("-")[1];
+      let dataArrIndex = loanData.findIndex(item => item.id === identifier);
 
       loanData.splice(dataArrIndex, 1);
-      document.getElementById(`${item}`).remove()
-    })
+      document.getElementById(`${item}`).remove();
+    });
 
-    selectedItemsArray = null
-    countElement.innerHTML=``
-    localStorage.setItem("LPMdata", JSON.stringify(loanData))
+    selectedItemsArray = null;
+    countElement.innerHTML = ``;
+    localStorage.setItem("LPMdata", JSON.stringify(loanData));
 
-    let viewMode = localStorage.getItem('viewMode')
-    viewMode === 'list' ? listView() : gridView()
+    let viewMode = localStorage.getItem("viewMode");
+    viewMode === "list" ? listView() : gridView();
 
-    document.getElementById('multiselect-actions').remove()
-    document.getElementById('multi-select').classList.remove('active-view')
-  }else{
-    let counter = document.getElementById('selected-count')
+    document.getElementById("multiselect-actions").remove();
+    document.getElementById("multi-select").classList.remove("active-view");
+  } else {
+    let counter = document.getElementById("selected-count");
 
-    counter.classList.add('noneSelected')
+    counter.classList.add("noneSelected");
     setTimeout(() => {
-      counter.classList.remove('noneSelected');
-    }, 800)
+      counter.classList.remove("noneSelected");
+    }, 800);
   }
 }
 
-function selectAll(){
+function selectAll() {
   //If initial 'allSelected' value is false we can assume we are adding all items, if initial value is true was are removing all items
-  let allCards = allSelected ? selectedItemsArray : document.querySelectorAll('.loan')//gather all loan items
-  console.log(allCards)
-  if(!selectedItemsArray) selectedItemsArray = [];//If the array doesn't exist create it
+  let allCards = allSelected
+    ? selectedItemsArray
+    : document.querySelectorAll(".loan"); //gather all loan items
+  if (!selectedItemsArray) selectedItemsArray = []; //If the array doesn't exist create it
 
-  allSelected = !allSelected
+  allSelected = !allSelected;
 
-  let viewMode = localStorage.getItem('viewMode')
+  let viewMode = localStorage.getItem("viewMode");
   let item;
-  viewMode === 'list' ? document.getElementById('select-all').checked = selectAll : null//toggles master checkmark, based on whether the are selecting or unselecting in listMode
-  allCards.forEach((card)=>{
-    if(allSelected){
-      selectedItemsArray.push(card.id)
-      card.querySelector('.checkbox').checked = true
-      card.classList.add('selected')
-    }else{
-      item = document.getElementById(`${card}`)
-      item.classList.remove('selected')
+  let text = document.getElementById('all-multiselect')
+
+  viewMode === "list"
+    ? (document.getElementById("select-all").checked = selectAll)
+    : null; //toggles master checkmark, based on whether the are selecting or unselecting in listMode
+  allCards.forEach((card) => {
+    if (allSelected) {
+      selectedItemsArray.push(card.id);
+      card.querySelector(".checkbox").checked = true;
+      card.classList.add("selected");
+      text.style.fontSize =  '1rem'
+      text.innerHTML = 'Unselect All'
+    } else {
+      item = document.getElementById(`${card}`);
+      item.classList.remove("selected");
       item.querySelector(`.checkbox`).checked = allSelected;
-      document.getElementById('select-all').checked = allSelected
+      document.getElementById("select-all").checked = allSelected;
+      text.innerHTML = 'Select All'
     }
-  })
-  if(!allSelected){
-    selectedItemsArray=null;
-    allCards=[]
+  });
+
+  if (!allSelected) {
+    selectedItemsArray = null;
+    allCards = [];
+  }
+
+  selectedItemsArray
+    ? (document.getElementById(
+      "selected-count"
+    ).innerHTML = `${selectedItemsArray.length} selected`)
+    : (document.getElementById("selected-count").innerHTML = `0 selected`);
+}
+
+function selectGridItem(element) {
+  if (!selectedItemsArray) {
+    selectedItemsArray = [];
+    countElement = document.getElementById("selected-count");
+  }
+  if (selectedItemsArray.includes(element.id)) {
+    element.classList.remove("selected");
+    selectedItemsArray = selectedItemsArray.filter((i) => i !== element.id);
+    document.getElementById("selected-count").innerHTML =
+      selectedItemsArray.length
+        ? `${selectedItemsArray.length} selected`
+        : ` 0 selected`;
+  } else {
+    selectedItemsArray.push(element.id);
+    element.classList.add("selected");
+    document.getElementById(
+      "selected-count"
+    ).innerHTML = `${selectedItemsArray.length} selected`;
   }
 }
 
-function selectGridItem(element){
-  if(!selectedItemsArray){
-    selectedItemsArray = []
-    countElement = document.getElementById('selected-count')
+function selectListItem(element) {
+  let targetItem = element;
+  if (!selectedItemsArray) {
+    selectedItemsArray = [];
+    countElement = document.getElementById("selected-count");
   }
-  if(selectedItemsArray.includes(element.id)){
-    element.classList.remove('selected')
-    selectedItemsArray = selectedItemsArray.filter(i => i !== element.id)
-    document.getElementById('selected-count').innerHTML = selectedItemsArray.length ? `${selectedItemsArray.length} selected` : ` 0 selected`
-  }else{
-    selectedItemsArray.push(element.id)
-    element.classList.add('selected')
-    document.getElementById('selected-count').innerHTML = `${selectedItemsArray.length} selected`
-  }
-}
 
-function selectListItem(element){
-  let targetItem = element
-  if(!selectedItemsArray){
-    selectedItemsArray = []
-    countElement = document.getElementById('selected-count')}
-
-  if(selectedItemsArray.includes(targetItem.id)){
-    selectedItemsArray = selectedItemsArray.filter(i=> i !== targetItem.id)
-    document.getElementById('selected-count').innerHTML = selectedItemsArray.length ? `${selectedItemsArray.length} selected` : '0 selected'
-  }else{
-    selectedItemsArray.push(targetItem.id)
-    document.getElementById('selected-count').innerHTML = `${selectedItemsArray.length} selected`
+  if (selectedItemsArray.includes(targetItem.id)) {
+    selectedItemsArray = selectedItemsArray.filter((i) => i !== targetItem.id);
+    document.getElementById("selected-count").innerHTML =
+      selectedItemsArray.length
+        ? `${selectedItemsArray.length} selected`
+        : "0 selected";
+  } else {
+    selectedItemsArray.push(targetItem.id);
+    document.getElementById(
+      "selected-count"
+    ).innerHTML = `${selectedItemsArray.length} selected`;
   }
 }
 
-function selectGridRender(){
-  loanContainer.innerHTML = ''//clear the container
-  selectMode = true
-  loanData.forEach(({id, loanName, balance, rate, minPayment, order, loanType})=>{//re-render to be selectable
-    let HTMLString = `
+function selectGridRender() {
+  loanContainer.innerHTML = ""; //clear the container
+  selectMode = true;
+  loanData.forEach(
+    ({ id, loanName, balance, rate, minPayment, order, loanType }) => {
+      //re-render to be selectable
+      let HTMLString = `
     <div class="selectable loan" id="group-${id}">
       <span><strong>Loan Name:</strong></span>
       <p>${loanName}</p>
@@ -778,39 +859,50 @@ function selectGridRender(){
       <p>$${Number.parseFloat(minPayment).toFixed(2)}</p>
       <span><strong>Payment Order</strong></span>
       <p>${order}</p>
-     </div>`
+     </div>`;
 
-    loanContainer.insertAdjacentHTML(`beforeend`, HTMLString)//insert after last item
+      loanContainer.insertAdjacentHTML(`beforeend`, HTMLString); //insert after last item
 
-    if(selectedItemsArray && selectedItemsArray.includes(`group-${id}`)){//Preserve selections going from list to grid view
-      document.getElementById(`group-${id}`).classList.add('selected')}
+      if (selectedItemsArray && selectedItemsArray.includes(`group-${id}`)) {
+        //Preserve selections going from list to grid view
+        document.getElementById(`group-${id}`).classList.add("selected");
+      }
 
-    let element = document.getElementById(`group-${id}`)//reference the recently added item
-    let selectHandler = ()=>{
-      selectGridItem(element)}//select listener for recent element
+      let element = document.getElementById(`group-${id}`); //reference the recently added item
+      let selectHandler = () => {
+        selectGridItem(element);
+      }; //selector listener for recent element
 
-    element.addEventListener('click', selectHandler)})//add a listener, make it selectable
+      element.addEventListener("click", selectHandler);
+    }
+  ); //add a listener, make it selectable
 
   //after all items are added, inject the tool actions
   HTMLString = `
   <ul id='multiselect-actions'>
       <li id='exit-multiselect'>Cancel</li>
       <li id="delete-multiselect" disabled>Delete</li>
-      <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0} selected</li>
-  </ul>`
-  let selectCount = document.getElementById('multiselect-actions') || null
-  if(selectCount){
-    selectCount.remove()
-    utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar  
-  }else{
-    utilities.insertAdjacentHTML('beforeend', HTMLString)}//insert at the end of the toolbar
+      <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0
+    } selected</li>
+  </ul>`;
+  let selectCount = document.getElementById("multiselect-actions") || null;
+  if (selectCount) {
+    selectCount.remove();
+    utilities.insertAdjacentHTML("beforeend", HTMLString); //insert at the end of the toolbar
+  } else {
+    utilities.insertAdjacentHTML("beforeend", HTMLString);
+  } //insert at the end of the toolbar
 
-  document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
-  document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)
+  document
+    .getElementById("exit-multiselect")
+    .addEventListener("click", exitMultiselect); //add the button listeners
+  document
+    .getElementById("delete-multiselect")
+    .addEventListener("click", deleteMultiselect);
 }
 
-function selectListRender(){
-  loanContainer.innerHTML =`
+function selectListRender() {
+  loanContainer.innerHTML = `
     <table id="loan-List">
       <tr id="header">
         <th>Loan Name</th>
@@ -825,15 +917,14 @@ function selectListRender(){
           </label>
         </th>
       </tr>
-    </table>`
-  selectMode = true
-  let loanList =  document.getElementById('loan-List') //the list items container
+    </table>`;
+  selectMode = true;
+  let loanList = document.getElementById("loan-List"); //the list items container
   let HTMLString;
 
   loanData.forEach(
-    ({id, loanName, balance, rate, minPayment, order, loanType}) =>{
-
-      HTMLString =`
+    ({ id, loanName, balance, rate, minPayment, order, loanType }) => {
+      HTMLString = `
       <tr class="loan selectable-row" id='group-${id}'>
         <td>${loanName}</td>
         <td>$${Number.parseFloat(balance).toFixed(2)}</td>
@@ -846,35 +937,42 @@ function selectListRender(){
             <span class="checkmark"></span>
           </label>
         </td>
-      </tr>`
-      loanList.insertAdjacentHTML('beforeend', HTMLString)
+      </tr>`;
+      loanList.insertAdjacentHTML("beforeend", HTMLString);
 
-      if(selectedItemsArray && selectedItemsArray.includes(`group-${id}`)){
-        let row = document.getElementById(`group-${id}`)
-        let checkbox = row.querySelector('.checkbox')
-        checkbox.checked = !checkbox.checked
-        row.classList.toggle('selected', checkbox.checked)
+      //preserves selections after display mode change
+      if (selectedItemsArray && selectedItemsArray.includes(`group-${id}`)) {
+        let row = document.getElementById(`group-${id}`);
+        let checkbox = row.querySelector(".checkbox");
+        checkbox.checked = !checkbox.checked;
+        row.classList.toggle("selected", checkbox.checked);
       }
-    })
+    }
+  );
 
-  let selectHandler = (e)=>{
-    let row = e.target.closest('tr.selectable-row')
+  let selectHandler = (e) => {//Updates styles of a selected/unselected row
+    let row = e.target.closest("tr.selectable-row");
 
-    if(!row) return;
+    if (!row) return;
 
-    if(
-      e.target.closest('label.checkbox-container') ||
-      e.target.tagName === 'INPUT'
-    )row.classList.toggle('selected');
+    // if (
+    //   e.target.closest("label.checkbox-container") ||
+    //   e.target.tagName === "INPUT"
+    // ){
+    //   row.classList.toggle("selected");
+    // }
 
-    const checkbox = row.querySelector('.checkbox')
+    const checkbox = row.querySelector(".checkbox");
     checkbox.checked = !checkbox.checked;
 
-    row.classList.toggle('selected', checkbox.checked)
-    selectListItem(row)}
+    row.classList.toggle("selected", checkbox.checked);
+    console.log(row, Date.now())
+    selectListItem(row);//updates selected items in storage
+  };
 
-  loanList.addEventListener('click', (e)=>{
-    selectHandler(e)})
+  loanList.addEventListener("click", (e) => {
+    selectHandler(e);//attach listener to the loanlist container
+  });
 
   //after all items are added, inject the tool actions
   HTMLString = `
@@ -882,23 +980,34 @@ function selectListRender(){
       <li id='all-multiselect'>Select All</li>
       <li id='exit-multiselect'>Cancel</li>
       <li id="delete-multiselect" disabled>Delete</li>
-      <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0} selected</li>
-  </ul>`
-  let selectCount = document.getElementById('multiselect-actions') || null
-  if(selectCount){
-    selectCount.remove()
-    utilities.insertAdjacentHTML('beforeend', HTMLString)//insert at the end of the toolbar  
-  }else{
-    utilities.insertAdjacentHTML('beforeend', HTMLString)}//insert at the end of the toolbar
+      <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0
+    } selected</li>
+  </ul>`;
+  let selectCount = document.getElementById("multiselect-actions") || null;
+  if (selectCount) {
+    selectCount.remove();
+    utilities.insertAdjacentHTML("beforeend", HTMLString); //insert at the end of the toolbar
+  } else {
+    utilities.insertAdjacentHTML("beforeend", HTMLString);
+  } //insert at the end of the toolbar
 
-  document.getElementById('exit-multiselect').addEventListener('click',exitMultiselect)//add the button listeners
-  document.getElementById('delete-multiselect').addEventListener('click', deleteMultiselect)
-  document.getElementById('all-multiselect').addEventListener('click', selectAll)
+  document
+    .getElementById("exit-multiselect")
+    .addEventListener("click", exitMultiselect); //add the button listeners
+  document
+    .getElementById("delete-multiselect")
+    .addEventListener("click", deleteMultiselect);
+  document
+    .getElementById("all-multiselect")
+    .addEventListener("click", selectAll);
+  document
+    .getElementById("select-all")
+    .addEventListener('click', selectAll)
 }
 
 //reload all local storage data to the display field
-window.addEventListener('DOMContentLoaded', (e)=>{
-  updateLoanContainer()
-  viewListeners()
-  toolListeners()
-})
+window.addEventListener("DOMContentLoaded", (e) => {
+  updateLoanContainer();
+  viewListeners();
+  toolListeners();
+});
