@@ -1,12 +1,11 @@
 const elements = {
-  loanContainer:document.querySelector(".loan-container"),
-  modal:document.getElementById("blank-modal"),
-  backdrop:document.getElementById("overlay"),
-  utilities: document.getElementById('utilities'),
-  toolsContainer:document.getElementById('tools'),
-  updateLoansBtn:document.getElementById('update-loans'),
-  viewToggleContainer:document.getElementById('view-toggle') 
-}
+  loanContainer: document.querySelector(".loan-container"),
+  modal: document.getElementById("blank-modal"),
+  backdrop: document.getElementById("overlay"),
+  utilities: document.getElementById("utilities"),
+  toolsContainer: document.getElementById("tools"),
+  viewToggleContainer: document.getElementById("view-toggle"),
+};
 let selectedItemsArray = null;
 let selectMode = false;
 let countElement;
@@ -16,51 +15,58 @@ const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let currentData = {};
 
 function toolListeners() {
-  let selectListener = () => {
+  let selectHandler = (el) => {
     let viewMode = localStorage.getItem("viewMode");
-    if (!multiselect.classList.contains("active-view")) {
-      viewMode === "list" ? selectListRender() : selectGridRender();
-      multiselect.classList.add("active-view");
+    if (!el.classList.contains("active-view")) {
+      viewMode === "list" ? renderSelectList() : selectGridRender();
+      el.classList.add("active-view");
     } else {
       exitMultiselect();
     }
   };
 
-  let multiselect = document.getElementById("multi-select");
-  multiselect.addEventListener("click", selectListener);
+  let filterHandler = () => {
+    //IMPLEMENT FILTER TOOL
+    console.log("filter tool clicked!");
+  };
+
+  let duplicateHandler = () => {
+    //IMPLEMENT DUPLICATE TOOL
+    console.log("duplicate tool clicked!");
+  };
+
+  elements.toolsContainer.addEventListener("click", (event) => {
+    let target = event.target.closest("li");
+    if (target.id === "multi-select") {
+      selectHandler(target);
+    } else if (target.id === "filter-entries") {
+      filterHandler(); //NEED PARAMETER?
+    } else if (target.id === "duplicate-entry") {
+      duplicateHandler(); //NEED PARAMETER?
+    }
+  });
 }
 
 function viewListeners() {
-  let listViewHandler = () => {
-    listView();
-  };
-  let gridViewHandler = () => {
-    gridView();
-  };
-
-  if (localStorage.getItem("viewMode") === "list") {
-    listView();
-  } else {
-    gridView();
-  }
-
-  Array.from(viewToggleContainer.children).forEach((child) => {
-    if (child.id === "list-view") {
-      child.addEventListener("click", listViewHandler);
-    } else {
-      child.addEventListener("click", gridViewHandler);
+  elements.viewToggleContainer.addEventListener("click", (event) => {
+    let target = event.target.closest("li");
+    if (
+      target.id === "list-view" &&
+      !target.classList.contains("active-view")
+    ) {
+      listView();
+    } else if (
+      target.id === "grid-view" &&
+      !target.classList.contains("active-view")
+    ) {
+      gridView();
     }
   });
 }
 //Creates new id for a new list item
-function newListEntry() {
+function newEntry() {
   let identifier = Date.now();
   openNewModal(identifier);
-}
-//creates new id for  a new grid item
-function newGridEntry() {
-  let number = Date.now();
-  openNewModal(number);
 }
 //All HTML onclick should be turned to JS eventListeners. Little at a time.
 function openEditModal(dataObj) {
@@ -68,7 +74,7 @@ function openEditModal(dataObj) {
 
   let editHandler = (e) => {
     e.preventDefault();
-    const formData = new FormData(modal);
+    const formData = new FormData(elements.modal);
 
     UpdatedDataObj = {
       id: dataObj.id,
@@ -94,23 +100,23 @@ function openEditModal(dataObj) {
       );
     }
 
-    modal.removeEventListener("submit", editHandler);
+    elements.modal.removeEventListener("submit", editHandler);
   };
 
   let cancelEdit = () => {
-    modal.innerHTML = "";
-    modal.removeEventListener("submit", editHandler);
-    modal.style.visibility = "hidden";
-    backdrop.style.visibility = "hidden";
+    elements.modal.innerHTML = "";
+    elements.modal.removeEventListener("submit", editHandler);
+    elements.modal.style.visibility = "hidden";
+    elements.backdrop.style.visibility = "hidden";
 
-    modal.removeEventListener("submit", editHandler);
+    elements.modal.removeEventListener("submit", editHandler);
   };
 
   let deleteHandler = () => {
     deleteEntry(dataObj.id);
   };
 
-  modal.innerHTML = `
+  elements.modal.innerHTML = `
       <span>Edit Existing Entry</span>
       <input data-cell=''loan name id="loanName" type="text" placeholder="Name" class="loan-input" value='${dataObj.loanName}' name='loanName'></input>
       <input data-cell='balance' id="loanBalance" type="number" min="1" placeholder="Balance ($)" class="loan-input" value='${dataObj.balance}' name='loanBalance'></input>
@@ -146,12 +152,12 @@ function openEditModal(dataObj) {
 
   const cancelButton = document.getElementById(`editModalCancel-${dataObj.id}`);
   const deleteButton = document.getElementById(`editModalDelete-${dataObj.id}`);
-  modal.style.visibility = "visible";
-  backdrop.style.visibility = "visible";
+  elements.modal.style.visibility = "visible";
+  elements.backdrop.style.visibility = "visible";
 
   deleteButton.addEventListener("click", deleteHandler);
   cancelButton.addEventListener("click", cancelEdit);
-  modal.addEventListener("submit", editHandler);
+  elements.modal.addEventListener("submit", editHandler);
 }
 
 function openNewModal(identifier) {
@@ -159,7 +165,7 @@ function openNewModal(identifier) {
 
   let handler = (e) => {
     e.preventDefault();
-    const formData = new FormData(modal);
+    const formData = new FormData(elements.modal);
 
     //Need to pass 'identifier' to the handler, so the event listener should be a paramenter function.
     //Use a function with a reference to call the handler function with parameters
@@ -176,22 +182,22 @@ function openNewModal(identifier) {
     updateLocalStorage(newDataObj);
 
     if (localStorage.getItem("viewMode") === "list") {
-      addToList(document.getElementById("loan-List"), newDataObj);
+      addToList(document.getElementById("loan-list"), newDataObj);
     } else {
-      addToGrid(loanContainer, newDataObj);
+      addToGrid(elements.loanContainer, newDataObj);
     }
 
-    modal.removeEventListener("submit", handler);
+    elements.modal.removeEventListener("submit", handler);
   };
 
   let cancelEntry = () => {
-    modal.innerHTML = "";
-    modal.removeEventListener("submit", handler);
-    modal.style.visibility = "hidden";
-    backdrop.style.visibility = "hidden";
+    elements.modal.innerHTML = "";
+    elements.modal.removeEventListener("submit", handler);
+    elements.modal.style.visibility = "hidden";
+    elements.backdrop.style.visibility = "hidden";
   };
 
-  modal.innerHTML = `
+  elements.modal.innerHTML = `
       <span>Create A New Entry</span>
       <input data-cell="loan name" id="loanName" type="text" placeholder="Name" class="loan-input" name="loanName"></input>
       <input data-cell="balance" id="loanBalance" type="number" min="1" placeholder="Balance ($)" class="loan-input" name="loanBalance"></input>
@@ -223,69 +229,93 @@ function openNewModal(identifier) {
         <button id="newModalCancel-${identifier}" class="cancel-btn">Cancel</button>
         <button form="blank-modal" type="submit" id="newModalConfirm" class="confirm-btn">Confirm</button>
       </div>`;
-  modal.style.visibility = "visible";
-  backdrop.style.visibility = "visible";
+  elements.modal.style.visibility = "visible";
+  elements.backdrop.style.visibility = "visible";
 
   const cancelButton = document.getElementById(`newModalCancel-${identifier}`);
   cancelButton.addEventListener("click", cancelEntry);
-  modal.addEventListener("submit", handler);
+  elements.modal.addEventListener("submit", handler);
 }
 
 //Displays the user input as regular text
 function addToList(loanListContainer, dataObj) {
   updateLocalStorage(dataObj);
 
-  let openHandler = () => {
-    openEditModal(dataObj);
-  };
-  let deleteHandler = () => {
-    deleteEntry(dataObj.id);
-  };
-  let dropDownHandler = () => {
-    dropDown(dataObj.id);
-  };
+  let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
 
-  let HTMLString = `
-  <tr class="loan" id="group-${dataObj.id}">
-    <td>${dataObj.loanName}</td>
-    <td>$${Number.parseFloat(dataObj.balance).toFixed(2)}</td>
-    <td>${Number.parseFloat(dataObj.rate).toFixed(2)}%</td>
-    <td>$${Number.parseFloat(dataObj.minPayment).toFixed(2)}</td>
-    <td>${dataObj.order}</td>
-    <td>
-      <div class="dropdown">
-        <button class="arrow" id='dropDownMenu-${dataObj.id}'></button>
-        <ul class="dropdown-content">
-          <li><button id="edit-${dataObj.id
-    }" class="edit-btn menu-item">Edit</button></li>
-          <li><button id="delete-${dataObj.id
-    }" class="delete-btn menu-item">Delete</button></li>
-        </ul>
-      </div>
-    </td>
-  </tr>`;
+  let fields = [
+    loanName,
+    `$${Number.parseFloat(balance).toFixed(2)}`,
+    `${Number.parseFloat(rate).toFixed(2)}%`,
+    `$${Number.parseFloat(minPayment).toFixed(2)}`,
+    order,
+  ];
+  let trElement = document.createElement("tr");
+  trElement.classList.add('loan')
+  trElement.id = `group-${id}`
 
-  loanListContainer.insertAdjacentHTML("beforeend", HTMLString);
+  fields.forEach((field) => {
+    let tdElement = document.createElement("td");
+    tdElement.textContent = field;
+    trElement.appendChild(tdElement);
+  });
+  trElement.appendChild(generateDropdown(id));
 
-  document
-    .getElementById(`edit-${dataObj.id}`)
-    .addEventListener("click", openHandler);
-  document
-    .getElementById(`delete-${dataObj.id}`)
-    .addEventListener("click", deleteHandler);
-  document
-    .getElementById(`dropDownMenu-${dataObj.id}`)
-    .addEventListener("click", dropDownHandler);
+  loanListContainer.appendChild(trElement);
+}
 
-  modal.innerHTML = "";
-  modal.style.visibility = "hidden";
-  backdrop.style.visibility = "hidden";
+function generateDropdown(identifier) {
+  let df = document.createDocumentFragment();
+
+  let dropdownContainer = document.createElement("div");
+  dropdownContainer.classList.add("dropdown");
+
+  let arrow = document.createElement("button");
+  arrow.classList.add("arrow");
+  arrow.id = `${identifier}-arrow`;
+  dropdownContainer.appendChild(arrow);
+
+  let dropdownContent = document.createElement("ul");
+  dropdownContent.classList.add("dropdown-content");
+
+  let options = ["Edit", "Delete"];
+  options.forEach((option) => {
+    let li = document.createElement("li");
+    let button = document.createElement("button");
+    button.classList.add(`${option}-btn`, "menu-item");
+    button.textContent = option;
+    button.dataset.option = option;
+    button.dataset.group = identifier;
+    li.appendChild(button);
+    dropdownContent.appendChild(li);
+  });
+
+  dropdownContent.addEventListener("click", (event) => {
+    let target = event.target.closest("button");
+    let action = target.dataset.option;
+    let dataObj = loanData.findIndex((item) => item.id === identifier);
+
+    if (action === "Edit") {
+      openEditModal(dataObj);
+    } else if (action === "Delete") {
+      deleteEntry(identifier);
+    }
+  });
+  dropdownContainer.appendChild(dropdownContent);
+  df.appendChild(dropdownContainer);
+
+  return df;
 }
 
 //Renders loan container as a list view from user data
 function updateList() {
-  loanContainer.innerHTML = `
-    <table id="loan-List">
+  elements.loanContainer.replaceChildren(); //start with an empty loan container
+
+  let table = document.createElement("table"); //the table where the items will display
+  table.id = "loan-list";
+
+  let htmlString = `
+    <thead>
       <tr id="header">
         <th>Loan Name</th>
         <th>Balance</th>
@@ -293,59 +323,48 @@ function updateList() {
         <th>Minimum Payment</th>
         <th>Payment Order</th>
       </tr>
-    </table>`;
+    </thead>`;
+  table.insertAdjacentHTML("afterbegin", htmlString); //Simple and static header inserted
 
-  let loanList = document.getElementById("loan-List");
+  //Populate the table with the list items
+  loanData.forEach(({ id, loanName, balance, rate, minPayment, order }) => {
+    const tr = document.createElement("tr"); //create a row container
+    tr.classList.add("loan");
+    tr.id = `group-${id}`;
 
-  loanData.forEach((dataObj) => {
-    let { id, loanName, balance, rate, minPayment, order } = dataObj;
+    const fields = [
+      loanName,
+      `$${Number.parseFloat(balance).toFixed(2)}`,
+      `${Number.parseFloat(rate).toFixed(2)}%`,
+      `$${Number.parseFloat(minPayment).toFixed(2)}`,
+      order,
+    ];
 
-    loanList.innerHTML += `
-      <tr class="loan" id = 'group-${id}'>
-        <td>${loanName}</td>
-        <td>$${Number.parseFloat(balance).toFixed(2)}</td>
-        <td>${Number.parseFloat(rate).toFixed(2)}%</td>
-        <td>$${Number.parseFloat(minPayment).toFixed(2)}</td>
-        <td>${order}</td>
-        <td>
-          <div class="dropdown">
-            <button class="arrow" id='dropDownMenu-${id}'></button>
-            <ul class="dropdown-content">
-              <li><button id="edit-${id}" class="edit-btn menu-item">Edit</button></li>
-              <li><button id="delete-${id}" class="delete-btn menu-item">Delete</button></li>
-            </ul>
-          </div>
-        </td>
-      </tr>`;
+    //loop through the fields to generate table data
+    fields.forEach((text) => {
+      const td = document.createElement("td"); //create a table data element
+      td.textContent = text;
+      tr.appendChild(td);
+    });
+
+    const tdDropdown = document.createElement("td"); //create dropdown container
+    tdDropdown.appendChild(generateDropdown(id)); //insert dropdown content
+    tr.appendChild(tdDropdown); //insert the completed dropdown to the row
+
+    table.appendChild(tr); //completed row is added to the table
   });
 
-  loanData.forEach((dataObj) => {
-    let editHandler = () => {
-      openEditModal(dataObj);
-    };
-
-    let deleteHandler = () => {
-      deleteEntry(dataObj.id);
-    };
-
-    let dropDownHandler = () => {
-      dropDown(dataObj.id);
-    };
-
-    document
-      .getElementById(`edit-${dataObj.id}`)
-      .addEventListener("click", editHandler);
-    document
-      .getElementById(`delete-${dataObj.id}`)
-      .addEventListener("click", deleteHandler);
-    document
-      .getElementById(`dropDownMenu-${dataObj.id}`)
-      .addEventListener("click", dropDownHandler);
+  table.addEventListener("click", (event) => {
+    let target = event.target.closest("button.arrow");
+    if (!target) return;
+    target.classList.toggle("active");
   });
-  loanContainer.insertAdjacentHTML(
-    "beforeend",
-    '<button id="add-entry" onclick="newListEntry()"><span class="note">Add New Entry</span>+</button>'
-  );
+  elements.loanContainer.appendChild(table); //completed table is added to the loan container
+  let newEntryBtn = document.createElement("button");
+  newEntryBtn.id = "add-entry";
+  newEntryBtn.textContent = "Add Item";
+  newEntryBtn.addEventListener("click", newEntry);
+  elements.loanContainer.appendChild(newEntryBtn);
 }
 
 //displays editable data within in an open modal
@@ -372,10 +391,12 @@ function updateListItem(loanEl, dataObj) {
       <div class="dropdown">
         <button class="arrow" id='dropDownMenu-${dataObj.id}'></button>
         <ul class="dropdown-content">
-          <li><button class="edit-btn menu-item" id='edit-${dataObj.id
-    }'>Edit</button></li>
-          <li><button class="delete-btn menu-item" id='delete-${dataObj.id
-    }'>Delete</button></li>
+          <li><button class="edit-btn menu-item" id='edit-${
+            dataObj.id
+          }'>Edit</button></li>
+          <li><button class="delete-btn menu-item" id='delete-${
+            dataObj.id
+          }'>Delete</button></li>
         </ul>
       </div>
     </td>`;
@@ -390,9 +411,9 @@ function updateListItem(loanEl, dataObj) {
     .getElementById(`dropDownMenu-${dataObj.id}`)
     .addEventListener("click", dropDownHandler);
 
-  modal.innerHTML = "";
-  backdrop.style.visibility = "hidden";
-  modal.style.visibility = "hidden";
+  elements.modal.innerHTML = "";
+  elements.backdrop.style.visibility = "hidden";
+  elements.modal.style.visibility = "hidden";
 }
 
 //Adds an item to the GRID
@@ -412,10 +433,12 @@ function addToGrid(container, dataObj) {
     <div class="dropdown">
       <button id='dropDownMenu-${dataObj.id}' class="arrow"></button>
       <ul class="dropdown-content">
-        <li><button id='edit-${dataObj.id
-    }' class="edit-btn menu-item">Edit</button></li>
-        <li><button id='delete-${dataObj.id
-    }' class="delete-btn menu-item">Delete</button></li>
+        <li><button id='edit-${
+          dataObj.id
+        }' class="edit-btn menu-item">Edit</button></li>
+        <li><button id='delete-${
+          dataObj.id
+        }' class="delete-btn menu-item">Delete</button></li>
       </ul>
     </div>
     <span><strong>Loan Name:</strong></span>
@@ -444,17 +467,17 @@ function addToGrid(container, dataObj) {
     .getElementById(`delete-${dataObj.id}`)
     .addEventListener("click", deleteHandler);
 
-  modal.innerHTML = "";
-  modal.style.visibility = "hidden";
-  backdrop.style.visibility = "hidden";
+  elements.modal.innerHTML = "";
+  elements.modal.style.visibility = "hidden";
+  elements.backdrop.style.visibility = "hidden";
 }
 
 //Updates the GRID with the most recent data
 function updateGrid() {
-  loanContainer.innerHTML = ``;
+  elements.loanContainer.innerHTML = ``;
   loanData.forEach(
     ({ id, loanName, balance, rate, minPayment, order, loanType }) => {
-      loanContainer.innerHTML += `
+      elements.loanContainer.innerHTML += `
       <div class="loan" id="group-${id}">
         <div class="dropdown">
           <button id='dropDownMenu-${id}' class="arrow"></button>
@@ -477,9 +500,9 @@ function updateGrid() {
     }
   );
 
-  loanContainer.insertAdjacentHTML(
+  elements.loanContainer.insertAdjacentHTML(
     "beforeend",
-    `<button id="add-entry" onclick="newGridEntry()">+</button>`
+    `<button id="add-entry" onclick="newEntry()">+</button>`
   );
 
   loanData.forEach((dataObj) => {
@@ -521,10 +544,12 @@ function updateGridItem(loanEl, dataObj) {
     <div class="dropdown">
       <button id='dropDownMenu-${dataObj.id}' class="arrow"></button>
       <ul class="dropdown-content">
-        <li><button id='edit-${dataObj.id
-    }' class="edit-btn menu-item">Edit</button></li>
-        <li><button id='delete-${dataObj.id
-    }' class="delete-btn menu-item">Delete</button></li>
+        <li><button id='edit-${
+          dataObj.id
+        }' class="edit-btn menu-item">Edit</button></li>
+        <li><button id='delete-${
+          dataObj.id
+        }' class="delete-btn menu-item">Delete</button></li>
       </ul>
     </div>
     <span><strong>Loan Name:</strong></span>
@@ -548,9 +573,9 @@ function updateGridItem(loanEl, dataObj) {
     .getElementById(`delete-${dataObj.id}`)
     .addEventListener("click", deleteHandler);
 
-  modal.innerHTML = "";
-  modal.style.visibility = "hidden";
-  backdrop.style.visibility = "hidden";
+  elements.modal.innerHTML = "";
+  elements.modal.style.visibility = "hidden";
+  elements.backdrop.style.visibility = "hidden";
 }
 
 //Confirmation, populates data to local storage for future use
@@ -570,8 +595,8 @@ function updateLocalStorage(dataObj) {
 
 //Display user input as inline text
 function updateLoanContainer() {
-  loanContainer.innerHTML = "";
-  if (loanContainer.classList.contains("list")) {
+  elements.loanContainer.replaceChildren();
+  if (elements.loanContainer.classList.contains("list")) {
     updateList();
   } else {
     updateGrid();
@@ -588,10 +613,10 @@ function updateLoanContainer() {
 
 //cancel entry, deletes added container
 function cancelEntry() {
-  modal.removeEventListener("submit", handler);
-  modal.innerHTML = "";
-  modal.style.visibility = "hidden";
-  backdrop.style.visibility = "hidden";
+  elements.modal.removeEventListener("submit", handler);
+  elements.modal.innerHTML = "";
+  elements.modal.style.visibility = "hidden";
+  elements.backdrop.style.visibility = "hidden";
 }
 
 //deletes current container
@@ -603,19 +628,19 @@ function deleteEntry(id) {
       <button id='yes-btn'>Delete</button>
     </div>
   </dialog>`;
-  modal.insertAdjacentHTML("beforebegin", HTMLString);
+  elements.modal.insertAdjacentHTML("beforebegin", HTMLString);
 
   let confirmModal = document.getElementById("confirm-modal");
   let container;
 
-  backdrop.style.visibility = "visible";
+  elements.backdrop.style.visibility = "visible";
   confirmModal.showModal();
 
   let cancelDelete = () => {
     document.getElementById("confirm-modal").style.visibility = "hidden";
     confirmModal.close();
-    if (modal.style.visibility !== "visible") {
-      backdrop.style.visibility = "hidden";
+    if (elements.modal.style.visibility !== "visible") {
+      elements.backdrop.style.visibility = "hidden";
     }
     confirmModal.remove();
   };
@@ -631,9 +656,9 @@ function deleteEntry(id) {
     container.remove();
     loanData.splice(dataArrIndex, 1);
     localStorage.setItem("LPMdata", JSON.stringify(loanData));
-    modal.innerHTML = "";
-    modal.style.visibility = "hidden";
-    backdrop.style.visibility = "hidden";
+    elements.modal.innerHTML = "";
+    elements.modal.style.visibility = "hidden";
+    elements.backdrop.style.visibility = "hidden";
     confirmModal.close();
     confirmModal.remove();
   };
@@ -643,27 +668,22 @@ function deleteEntry(id) {
 }
 
 function listView() {
-  const toggleView = document.getElementById("view-toggle").children;
-  const listView = toggleView[0];
-  const gridView = toggleView[1];
+  const [listView, gridView] = elements.viewToggleContainer.children;
 
   if (selectMode) {
     document.getElementById("multiselect-actions").remove();
 
     localStorage.setItem("viewMode", "list");
-    loanContainer.classList.replace("grid", "list");
+    elements.loanContainer.classList.replace("grid", "list");
 
-    selectListRender();
+    renderSelectList();
   } else {
-    Array.from(toggleView).forEach((el) => {
-      el.classList.remove("active-view");
-    });
+    listView.classList.remove("active-view");
+    gridView.classList.remove("active-view");
 
-    if (!listView.classList.contains("active-view")) {
-      loanContainer.classList.replace("grid", "list");
-      updateList();
-      localStorage.setItem("viewMode", "list");
-    }
+    elements.loanContainer.classList.replace("grid", "list");
+    updateList();
+    localStorage.setItem("viewMode", "list");
   }
   listView.classList.add("active-view");
   gridView.classList.remove("active-view");
@@ -676,7 +696,7 @@ function gridView() {
 
   if (selectMode) {
     localStorage.setItem("viewMode", "grid");
-    loanContainer.classList.replace("list", "grid");
+    elements.loanContainer.classList.replace("list", "grid");
 
     selectGridRender();
   } else {
@@ -685,7 +705,7 @@ function gridView() {
     });
 
     if (!gridView.classList.contains("active-view")) {
-      loanContainer.classList.replace("list", "grid");
+      elements.loanContainer.classList.replace("list", "grid");
       updateGrid();
       localStorage.setItem("viewMode", "grid");
     }
@@ -730,7 +750,7 @@ function deleteMultiselect() {
   if (selectedItemsArray) {
     selectedItemsArray.forEach((item) => {
       let identifier = item.split("-")[1];
-      let dataArrIndex = loanData.findIndex(item => item.id === identifier);
+      let dataArrIndex = loanData.findIndex((item) => item.id === identifier);
 
       loanData.splice(dataArrIndex, 1);
       document.getElementById(`${item}`).remove();
@@ -766,7 +786,7 @@ function selectAll() {
 
   let viewMode = localStorage.getItem("viewMode");
   let item;
-  let text = document.getElementById('all-multiselect')
+  let text = document.getElementById("all-multiselect");
 
   viewMode === "list"
     ? (document.getElementById("select-all").checked = selectAll)
@@ -776,14 +796,14 @@ function selectAll() {
       selectedItemsArray.push(card.id);
       card.querySelector(".checkbox").checked = true;
       card.classList.add("selected");
-      text.style.fontSize =  '1rem'
-      text.innerHTML = 'Unselect All'
+      text.style.fontSize = "1rem";
+      text.innerHTML = "Unselect All";
     } else {
       item = document.getElementById(`${card}`);
       item.classList.remove("selected");
       item.querySelector(`.checkbox`).checked = allSelected;
       document.getElementById("select-all").checked = allSelected;
-      text.innerHTML = 'Select All'
+      text.innerHTML = "Select All";
     }
   });
 
@@ -794,8 +814,8 @@ function selectAll() {
 
   selectedItemsArray
     ? (document.getElementById(
-      "selected-count"
-    ).innerHTML = `${selectedItemsArray.length} selected`)
+        "selected-count"
+      ).innerHTML = `${selectedItemsArray.length} selected`)
     : (document.getElementById("selected-count").innerHTML = `0 selected`);
 }
 
@@ -842,7 +862,7 @@ function selectListItem(element) {
 }
 
 function selectGridRender() {
-  loanContainer.innerHTML = ""; //clear the container
+  elements.loanContainer.innerHTML = ""; //clear the container
   selectMode = true;
   loanData.forEach(
     ({ id, loanName, balance, rate, minPayment, order, loanType }) => {
@@ -861,7 +881,7 @@ function selectGridRender() {
       <p>${order}</p>
      </div>`;
 
-      loanContainer.insertAdjacentHTML(`beforeend`, HTMLString); //insert after last item
+      elements.loanContainer.insertAdjacentHTML(`beforeend`, HTMLString); //insert after last item
 
       if (selectedItemsArray && selectedItemsArray.includes(`group-${id}`)) {
         //Preserve selections going from list to grid view
@@ -882,15 +902,16 @@ function selectGridRender() {
   <ul id='multiselect-actions'>
       <li id='exit-multiselect'>Cancel</li>
       <li id="delete-multiselect" disabled>Delete</li>
-      <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0
-    } selected</li>
+      <li id="selected-count"> ${
+        selectedItemsArray ? selectedItemsArray.length : 0
+      } selected</li>
   </ul>`;
   let selectCount = document.getElementById("multiselect-actions") || null;
   if (selectCount) {
     selectCount.remove();
-    utilities.insertAdjacentHTML("beforeend", HTMLString); //insert at the end of the toolbar
+    elements.utilities.insertAdjacentHTML("beforeend", HTMLString); //insert at the end of the toolbar
   } else {
-    utilities.insertAdjacentHTML("beforeend", HTMLString);
+    elements.utilities.insertAdjacentHTML("beforeend", HTMLString);
   } //insert at the end of the toolbar
 
   document
@@ -901,8 +922,8 @@ function selectGridRender() {
     .addEventListener("click", deleteMultiselect);
 }
 
-function selectListRender() {
-  loanContainer.innerHTML = `
+function renderSelectList() {
+  elements.loanContainer.innerHTML = `
     <table id="loan-List">
       <tr id="header">
         <th>Loan Name</th>
@@ -950,7 +971,8 @@ function selectListRender() {
     }
   );
 
-  let selectHandler = (e) => {//Updates styles of a selected/unselected row
+  let selectHandler = (e) => {
+    //Updates styles of a selected/unselected row
     let row = e.target.closest("tr.selectable-row");
 
     if (!row) return;
@@ -966,12 +988,12 @@ function selectListRender() {
     checkbox.checked = !checkbox.checked;
 
     row.classList.toggle("selected", checkbox.checked);
-    console.log(row, Date.now())
-    selectListItem(row);//updates selected items in storage
+    console.log(row, Date.now());
+    selectListItem(row); //updates selected items in storage
   };
 
   loanList.addEventListener("click", (e) => {
-    selectHandler(e);//attach listener to the loanlist container
+    selectHandler(e); //attach listener to the loanlist container
   });
 
   //after all items are added, inject the tool actions
@@ -980,15 +1002,16 @@ function selectListRender() {
       <li id='all-multiselect'>Select All</li>
       <li id='exit-multiselect'>Cancel</li>
       <li id="delete-multiselect" disabled>Delete</li>
-      <li id="selected-count"> ${selectedItemsArray ? selectedItemsArray.length : 0
-    } selected</li>
+      <li id="selected-count"> ${
+        selectedItemsArray ? selectedItemsArray.length : 0
+      } selected</li>
   </ul>`;
   let selectCount = document.getElementById("multiselect-actions") || null;
   if (selectCount) {
     selectCount.remove();
-    utilities.insertAdjacentHTML("beforeend", HTMLString); //insert at the end of the toolbar
+    elements.utilities.insertAdjacentHTML("beforeend", HTMLString); //insert at the end of the toolbar
   } else {
-    utilities.insertAdjacentHTML("beforeend", HTMLString);
+    elements.utilities.insertAdjacentHTML("beforeend", HTMLString);
   } //insert at the end of the toolbar
 
   document
@@ -1000,9 +1023,7 @@ function selectListRender() {
   document
     .getElementById("all-multiselect")
     .addEventListener("click", selectAll);
-  document
-    .getElementById("select-all")
-    .addEventListener('click', selectAll)
+  document.getElementById("select-all").addEventListener("click", selectAll);
 }
 
 //reload all local storage data to the display field
