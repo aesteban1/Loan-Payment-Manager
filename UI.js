@@ -1,5 +1,5 @@
 const elements = {
-  loanContainer: document.querySelector(".loan-container"),
+  loanContainer: document.getElementById("loan-container"),
   modal: document.getElementById("blank-modal"),
   backdrop: document.getElementById("overlay"),
   utilities: document.getElementById("utilities"),
@@ -48,6 +48,26 @@ function toolListeners() {
 }
 
 function viewListeners() {
+  if (
+    localStorage.getItem("viewMode") === "list" &&
+    !elements.viewToggleContainer
+      .querySelector("#list-view")
+      .classList.contains("active-view")
+  ) {
+    elements.viewToggleContainer
+      .querySelector("#list-view")
+      .classList.add("active-view");
+  } else if (
+    localStorage.getItem("viewMode") === "grid" &&
+    !elements.viewToggleContainer
+      .querySelector("#grid-view")
+      .classList.contains("active-view")
+  ) {
+    !elements.viewToggleContainer
+      .querySelector("#grid-view")
+      .classList.add("active-view");
+  }
+
   elements.viewToggleContainer.addEventListener("click", (event) => {
     let target = event.target.closest("li");
     if (
@@ -68,12 +88,41 @@ function newEntry() {
   let identifier = Date.now();
   openNewModal(identifier);
 }
+
+function generateSelectMenu(menuName, stringArray, selected = null) {
+  let menuContainer = document.createElement("div");
+  menuContainer.classList.add("select-menu");
+
+  let menuLabel = document.createElement("label");
+  menuLabel.textContent = `${menuName}:`;
+  menuLabel.htmlFor = `${menuName}`;
+  menuContainer.appendChild(menuLabel);
+
+  let selectElement = document.createElement("select");
+  selectElement.id = `${menuName.split(" ").join("-")}`;
+  selectElement.name = `${menuName}:`;
+
+  stringArray.forEach((string) => {
+    let option = document.createElement("option");
+    option.value = string;
+    option.textContent = string;
+    if (selected && selected === string) {
+      option.selected = true;
+    }
+    selectElement.appendChild(option);
+  });
+
+  menuContainer.appendChild(selectElement);
+
+  return menuContainer;
+}
 //All HTML onclick should be turned to JS eventListeners. Little at a time.
 function openEditModal(dataObj) {
   let UpdatedDataObj;
+  console.log(dataObj)
 
-  let editHandler = (e) => {
-    e.preventDefault();
+  let updateHandler = (event) => {
+    event.preventDefault();
     const formData = new FormData(elements.modal);
 
     UpdatedDataObj = {
@@ -88,7 +137,7 @@ function openEditModal(dataObj) {
 
     updateLocalStorage(UpdatedDataObj);
 
-    if (localStorage.getItem("viewMode") === "list") {
+    if (localStorage.getItem("viewMode") === "list") {//Update funtionallity is not working properly, fix it.
       updateListItem(
         document.getElementById(`group-${dataObj.id}`),
         UpdatedDataObj
@@ -103,61 +152,112 @@ function openEditModal(dataObj) {
     elements.modal.removeEventListener("submit", editHandler);
   };
 
-  let cancelEdit = () => {
-    elements.modal.innerHTML = "";
-    elements.modal.removeEventListener("submit", editHandler);
-    elements.modal.style.visibility = "hidden";
-    elements.backdrop.style.visibility = "hidden";
+  elements.modal.insertAdjacentHTML(
+    "afterbegin",
+    `<span>Edit Existing Entry</span>`
+  );
+  let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
 
-    elements.modal.removeEventListener("submit", editHandler);
-  };
+  let nameInput = document.createElement("input");
+  nameInput.dataset.cell = "loan name";
+  nameInput.type = "text";
+  nameInput.id = "loanName";
+  nameInput.placeholder = "Loan Name";
+  nameInput.classList.add("loan-input");
+  nameInput.value = loanName;
+  nameInput.name = "loanName";
+  elements.modal.appendChild(nameInput);
 
-  let deleteHandler = () => {
-    deleteEntry(dataObj.id);
-  };
+  let balanceInput = document.createElement("input");
+  balanceInput.dataset.cell = "balance";
+  balanceInput.type = "number";
+  balanceInput.min = "1";
+  balanceInput.id = "loanBalance";
+  balanceInput.placeholder = "Balance ($)";
+  balanceInput.classList.add("loan-input");
+  balanceInput.value = balance;
+  balanceInput.name = "loanName";
+  elements.modal.appendChild(balanceInput);
 
-  elements.modal.innerHTML = `
-      <span>Edit Existing Entry</span>
-      <input data-cell=''loan name id="loanName" type="text" placeholder="Name" class="loan-input" value='${dataObj.loanName}' name='loanName'></input>
-      <input data-cell='balance' id="loanBalance" type="number" min="1" placeholder="Balance ($)" class="loan-input" value='${dataObj.balance}' name='loanBalance'></input>
-      <input data-cell='interest rate' id="loanRate" type="number" min="0" step="0.1" placeholder="0.00%" class="loan-input" value='${dataObj.rate}' name='loanRate'></input>
-      <input data-cell='minimum payment' id="loanMin" type="number" min="0" step="0.01" placeholder="$0.00" class="loan-input" value='${dataObj.minPayment}' name='loanMin'></input>
-      <div class='select-menu'>
-        <label for="payment order">Payment Order:</label>
-        <select id="loanOrder" name="payment order">
-          <option value="interest-first payments">Interest-First Payments</option>
-          <option value="principal-first payments">Principal-First Payments</option>
-        </select>
-      </div>
-      <div class="select-menu">
-        <label for="loan type">Loan Type: </label>
-        <select id="loan-type" name="loan type">
-          <option value="federal student loan">Federal Student Loan</option>
-          <option value="private student loan">Private Student Loan</option>
-          <option value="credit card debt">Credit Card</option>
-          <option value="car loan">Car Loan</option>
-          <option value="mortgage">Mortgage</option>
-          <option value="personal Loan">Personal Loan</option>
-          <option value="buy now pay later">Buy Now, Pay Later</option>
-          <option value="home equity loan">Home Equity Loan</option>
-          <option value="medical debt">Medical Debt</option>
-          <option value="Payday/Title Loan">Payday/Title Loan</option>
-        </select>
-      </div>
-      <div id="util">
-        <button id="editModalDelete-${dataObj.id}"  class='delete-btn' type="button">Delete</button>
-        <button id="editModalCancel-${dataObj.id}" class="cancel-btn">Cancel</button>
-        <button form="blank-modal" type="submit" id="editModalConfirm" class="confirm-btn">Update</button>
-      </div>`;
+  let interestInput = document.createElement("input");
+  interestInput.dataset.cell = "interest rate";
+  interestInput.type = "number";
+  interestInput.id = "loanRate";
+  interestInput.min = "0";
+  interestInput.step = "0.1";
+  interestInput.placeholder = "0.00%";
+  interestInput.classList.add("loan-input");
+  interestInput.value = rate;
+  interestInput.name = "loanRate";
+  elements.modal.appendChild(interestInput);
 
-  const cancelButton = document.getElementById(`editModalCancel-${dataObj.id}`);
-  const deleteButton = document.getElementById(`editModalDelete-${dataObj.id}`);
+  let minPaymentInput = document.createElement("input");
+  minPaymentInput.dataset.cell = "minimum payment";
+  minPaymentInput.type = "number";
+  minPaymentInput.min = "0";
+  minPaymentInput.step = "0.01";
+  minPaymentInput.placeholder = "$0.00";
+  minPaymentInput.classList.add("loan-input");
+  minPaymentInput.value = minPayment;
+  minPaymentInput.name = "loanMin";
+  elements.modal.appendChild(minPaymentInput);
+
+  let menuName = "Payment Order";
+  let OrderTypes = ["Interest-First Payments", "Principal-First Payments"];
+
+  elements.modal.appendChild(generateSelectMenu(menuName, OrderTypes, order));
+
+  menuName = "Loan Type";
+  let loanTypes = [
+    "Federal Student Loans",
+    "Provate Student Loans",
+    "Credit Card",
+    "Car Loan",
+    "Mortgage",
+    "Personal Loan",
+    "Buy Now Pay Later",
+    "Home Equity Loan",
+    "Medical Debt",
+    "Payday/Title Loan",
+  ];
+
+  elements.modal.appendChild(generateSelectMenu(menuName, loanTypes, loanType));
+
+  let actionsContainer = document.createElement("div");
+  actionsContainer.id = "util";
+
+  let actions = ["Delete", "Cancel", "Update"];
+  actions.forEach((action) => {
+    let button = document.createElement("button");
+    button.classList.add(`${action}-btn`);
+    button.textContent = action;
+    button.dataset.action = action;
+    if (action == "Update") {
+      button.type = "submit";
+      button.form = "blank-modal";
+    }
+    actionsContainer.appendChild(button);
+  });
+
+  elements.modal.appendChild(actionsContainer);
+
+  elements.modal.addEventListener("click", (event) => {
+    let target = event.target.closest("button");
+    if (!target) return;
+
+    if (target.dataset.action === "Delete") {
+      deleteEntry(dataObj.id);
+    } else if ((target.dataset.action = "Cancel")) {
+      elements.modal.replaceChildren();
+      elements.modal.style.visibility = "hidden";
+      elements.backdrop.style.visibility = "hidden";
+    } else if ((target.dataset.action = "Update")) {
+      updateHandler();
+    }
+  });
+
   elements.modal.style.visibility = "visible";
   elements.backdrop.style.visibility = "visible";
-
-  deleteButton.addEventListener("click", deleteHandler);
-  cancelButton.addEventListener("click", cancelEdit);
-  elements.modal.addEventListener("submit", editHandler);
 }
 
 function openNewModal(identifier) {
@@ -239,6 +339,7 @@ function openNewModal(identifier) {
 
 //Displays the user input as regular text
 function addToList(loanListContainer, dataObj) {
+  console.log("Adding element to:", loanListContainer);
   updateLocalStorage(dataObj);
 
   let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
@@ -250,9 +351,10 @@ function addToList(loanListContainer, dataObj) {
     `$${Number.parseFloat(minPayment).toFixed(2)}`,
     order,
   ];
+
   let trElement = document.createElement("tr");
-  trElement.classList.add('loan')
-  trElement.id = `group-${id}`
+  trElement.classList.add("loan");
+  trElement.id = `group-${id}`;
 
   fields.forEach((field) => {
     let tdElement = document.createElement("td");
@@ -262,6 +364,10 @@ function addToList(loanListContainer, dataObj) {
   trElement.appendChild(generateDropdown(id));
 
   loanListContainer.appendChild(trElement);
+
+  elements.modal.replaceChildren();
+  elements.modal.style.visibility = "hidden";
+  elements.backdrop.style.visibility = "hidden";
 }
 
 function generateDropdown(identifier) {
@@ -293,7 +399,7 @@ function generateDropdown(identifier) {
   dropdownContent.addEventListener("click", (event) => {
     let target = event.target.closest("button");
     let action = target.dataset.option;
-    let dataObj = loanData.findIndex((item) => item.id === identifier);
+    let dataObj = loanData.find((item) => item.id === identifier);
 
     if (action === "Edit") {
       openEditModal(dataObj);
@@ -596,6 +702,11 @@ function updateLocalStorage(dataObj) {
 //Display user input as inline text
 function updateLoanContainer() {
   elements.loanContainer.replaceChildren();
+  let viewMode = localStorage.getItem("viewMode");
+
+  elements.loanContainer.classList.remove("list", "grid");
+  elements.loanContainer.classList.add(viewMode);
+
   if (elements.loanContainer.classList.contains("list")) {
     updateList();
   } else {
