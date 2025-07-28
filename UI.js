@@ -100,7 +100,7 @@ function generateSelectMenu(menuName, stringArray, selected = null) {
 
   let selectElement = document.createElement("select");
   selectElement.id = `${menuName.split(" ").join("-")}`;
-  selectElement.name = `${menuName}:`;
+  selectElement.name = `${menuName}`;
 
   stringArray.forEach((string) => {
     let option = document.createElement("option");
@@ -119,7 +119,6 @@ function generateSelectMenu(menuName, stringArray, selected = null) {
 //All HTML onclick should be turned to JS eventListeners. Little at a time.
 function openEditModal(dataObj) {
   let UpdatedDataObj;
-  console.log(dataObj)
 
   let updateHandler = (event) => {
     event.preventDefault();
@@ -131,13 +130,14 @@ function openEditModal(dataObj) {
       balance: formData.get("loanBalance") || 0,
       rate: formData.get("loanRate") || 0,
       minPayment: formData.get("loanMin") || 0,
-      order: formData.get("payment order"),
-      loanType: formData.get("loan type") || "personal loan",
+      order: formData.get("Payment Order"),
+      loanType: formData.get("Loan Type") || "personal loan",
     };
 
     updateLocalStorage(UpdatedDataObj);
 
-    if (localStorage.getItem("viewMode") === "list") {//Update funtionallity is not working properly, fix it.
+    if (localStorage.getItem("viewMode") === "list") {
+      //Update funtionallity is not working properly, fix it.
       updateListItem(
         document.getElementById(`group-${dataObj.id}`),
         UpdatedDataObj
@@ -176,7 +176,7 @@ function openEditModal(dataObj) {
   balanceInput.placeholder = "Balance ($)";
   balanceInput.classList.add("loan-input");
   balanceInput.value = balance;
-  balanceInput.name = "loanName";
+  balanceInput.name = "loanBalance";
   elements.modal.appendChild(balanceInput);
 
   let interestInput = document.createElement("input");
@@ -339,7 +339,6 @@ function openNewModal(identifier) {
 
 //Displays the user input as regular text
 function addToList(loanListContainer, dataObj) {
-  console.log("Adding element to:", loanListContainer);
   updateLocalStorage(dataObj);
 
   let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
@@ -702,8 +701,7 @@ function updateLocalStorage(dataObj) {
 //Display user input as inline text
 function updateLoanContainer() {
   elements.loanContainer.replaceChildren();
-  let viewMode = localStorage.getItem("viewMode");
-
+  let viewMode = localStorage.getItem("viewMode") || "list";
   elements.loanContainer.classList.remove("list", "grid");
   elements.loanContainer.classList.add(viewMode);
 
@@ -1079,8 +1077,7 @@ function renderSelectList() {
         checkbox.checked = !checkbox.checked;
         row.classList.toggle("selected", checkbox.checked);
       }
-    }
-  );
+    });
 
   let selectHandler = (e) => {
     //Updates styles of a selected/unselected row
