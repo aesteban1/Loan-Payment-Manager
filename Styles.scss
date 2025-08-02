@@ -98,8 +98,8 @@ h1 {
     3px 3px 5px 0px rgba(0, 0, 0, 0.25);
   border-radius: 20px;
   .active-view {
-  box-shadow: inset 1px 2px 5px rgba(0, 0, 0, 0.5);
-}
+    box-shadow: inset 1px 2px 5px rgba(0, 0, 0, 0.5);
+  }
   ul {
     display: flex;
     position: relative;
@@ -115,14 +115,13 @@ h1 {
       display: inline-block;
       width: fit-content;
       height: fit-content;
-      button{
+      button {
         height: 38px;
         width: 38px;
         padding: 0;
         display: block;
         border: none;
-        box-shadow:
-          inset 1px 1px 1px rgba(200, 200, 200, 0.25),
+        box-shadow: inset 1px 1px 1px rgba(200, 200, 200, 0.25),
           3px 3px 5px 0px rgba(0, 0, 0, 0.25);
         background-color: #2a2a2a;
         border-radius: 8px;
@@ -188,8 +187,7 @@ h1 {
 
 .loan {
   position: relative;
-  // background-color: #484848;
-  background-color: #272935;
+  background-color: #1e2124;
 }
 
 @keyframes gridSelect {
@@ -219,7 +217,7 @@ h1 {
   // background-color: rgba(130, 93, 255, 1);
   background-color: rgb(98, 70, 190);
   color: white;
-  outline: 1px solid #a9a9a9;
+  outline: 1px solid rgba(160, 160, 160, 0.5);
   transition: all 0.2s ease-in-out;
   box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.5);
 }
@@ -260,20 +258,39 @@ h1 {
     margin: 10px;
     height: 350px;
     width: 300px;
-    .loan-title{
+    outline: 1px solid rgba(160, 160, 160, 0.25);
+    .loan-title {
       width: 100%;
       display: flex;
       justify-content: space-between;
       margin-bottom: 5px;
-      a{
+      a {
+        position: relative;
         display: inline-block;
         width: 50px;
         height: 50px;
-        .iconType{
-          fill: #825dff;
+        .iconType {
+          fill: #6950be;
+        }
+        .tooltip {
+          visibility: hidden;
+          position: absolute;
+          top: -30%;
+          right: -22%;
+          width: max-content;
+          background-color: #3a3a3a;
+          padding: 5px;
+          border-radius: 5px;
+          outline: solid 1px rgba(160, 160, 160, 0.5);
+        }
+        &:hover {
+          .tooltip {
+            transition: all 0.3s ease-in-out;
+            visibility: visible;
+          }
         }
       }
-      .title-name{
+      .title-name {
         display: inline-block;
         font-weight: bolder;
         font-size: 1.2rem;
@@ -285,30 +302,45 @@ h1 {
       }
     }
 
-    .info-container{
+    .info-container {
       list-style: none;
       padding: 0;
       margin: 0;
-      .info-row{
+      .info-row {
         display: grid;
         grid-template-columns: auto 1fr;
         grid-template-rows: auto auto;
-        column-gap: .5rem;
+        column-gap: 0.5rem;
         align-items: center;
         min-height: 2.4rem;
-        span + strong,
-        p{
+        margin: 5px 0;
+        .label,
+        .data {
           line-height: 1.2rem;
+          font-weight: bold;
         }
-        .info-svg{
+        .label {
+          color: #a3a3a3;
+        }
+        .info-svg {
           grid-row: span 2;
           width: 24px;
           height: 24px;
-          .info-icon{
-            fill: #d4b6f9;
+          .info-icon {
+            fill: #6950be;
             stroke: #000000;
           }
         }
+      }
+      .paymentOrder {
+        width: max-content;
+        padding: 4px 8px;
+        background-color: #6950be;
+        font-weight: bolder;
+        color: white;
+        border-radius: 1rem;
+        font-size: 0.9rem;
+        margin-left: 30px;
       }
     }
 
@@ -396,11 +428,11 @@ h1 {
       width: 20px;
       margin: auto 0;
       background-color: #808080;
-      outline: 1px solid white;
+      outline: 1px solid rgba(160, 160, 160, 0.5);
     }
     input:checked + .checkmark {
       background-color: #825dff;
-      outline: 1px solid white;
+      outline: 1px solid rgba(160, 160, 160, 0.5);
     }
     input:checked + .checkmark::after {
       content: "✓";
@@ -479,34 +511,6 @@ h1 {
     height: 50px;
     margin: 0;
   }
-  .note {
-    position: absolute;
-    bottom: -2rem;
-    left: 45%;
-    font-size: 1rem;
-    background-color: #333333;
-    height: 2rem;
-    width: 15ch;
-    align-content: center;
-    opacity: 0;
-    border-radius: 5px;
-    transition: all 0.1s ease-in-out;
-  }
-
-  .note::after {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    right: 60%;
-    border: solid 10px;
-    border-color: transparent transparent #333333 transparent;
-  }
-
-  #add-entry:hover {
-    .note {
-      opacity: 1;
-    }
-  }
 }
 
 .editable-modal {
@@ -524,54 +528,74 @@ h1 {
   transform: translate(-50%, -50%);
   box-sizing: border-box;
   padding: 20px 30px;
+  outline: 1px solid rgba(160, 160, 160, 0.6);
 
-  > * {
-    margin: 10px 0;
+  .loan-input {
+    font-size: 1.2rem;
+    border-radius: 10px;
+    background-color: #505050;
+    color: #e9e9e9;
+    height: 2rem;
+    &.digits {
+      width: 13ch;
+    }
+    &.text {
+      width: 26ch;
+    }
   }
 
-  .Confirm-btn,
+  h2 {
+    text-align: center;
+  }
+  div {
+    margin-top: 20px;
+    .inputLabel {
+      display: block;
+      width: 100%;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+  }
+
   .Cancel-btn,
-  .Delete-btn,
-  .Edit-btn {
+  .Update-btn,
+  .Delete-btn {
     cursor: pointer;
-    color: #121212;
+    color: #e9e9e9;
+    background-color: #2a2a2a;
+    outline: 1px solid rgba(160, 160, 160, 0.25);
     font-weight: bold;
     transition: all ease-in-out 0.1s;
     border: none;
     width: 10ch;
     height: 2rem;
     border-radius: 0.5rem;
+    margin: 0px 5px;
   }
 
   .Cancel-btn:hover {
     background-color: #808080;
-    color: #e9e9e9;
+    color: #ffffff;
   }
 
-  .Confirm-btn:hover {
-    color: #e9e9e9;
+  .Update-btn:hover {
+    color: #000000;
     background-color: #38ba7c;
   }
 
   .Delete-btn:hover {
-    color: #e9e9e9;
+    color: #000000;
     background-color: #ed5e68;
   }
   select {
     height: 2rem;
     border: none;
+    border-radius: 10px;
     background-color: #707070;
     color: #ffffff;
     font-weight: bold;
+    cursor: pointer;
   }
-}
-
-.loan-input {
-  font-size: 1.2rem;
-  background-color: #505050;
-  color: #e9e9e9;
-  height: 2rem;
-  width: 20ch;
 }
 
 .loan > label,
@@ -685,7 +709,7 @@ input[type="number"] {
   }
 
   &::after {
-    bottom: 10px;
+    bottom: 8px;
   }
 }
 
@@ -732,7 +756,7 @@ input[type="number"] {
   margin: 0;
   position: absolute;
   width: 100px;
-  height: 0;//It's hidden
+  height: 0; //It's hidden
   right: 0;
   overflow: hidden;
   z-index: 50;
