@@ -1,14 +1,15 @@
 const elements = {
   loanContainer: document.getElementById("loan-container"),
   backdrop: document.getElementById("overlay"),
-  utilities: document.querySelector(".utilities"),
   toolsContainer: document.getElementById("tools"),
   viewToggleContainer: document.getElementById("view-toggle"),
+  tableToolbar: document.getElementById("table-toolbar"),
+  // utilities: document.querySelector(".utilities")
 };
 let selectedItemsArray = null;
 let selectMode = false;
 let allSelected = false;
-let modal;//This item is generated, and deleted constantly.
+let modal; //This item is generated, and deleted constantly.
 
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 const viewMode = localStorage.getItem("viewMode") || "empty";
@@ -18,7 +19,7 @@ const svgArray = {
     "Private Student Loan":
       '<svg class="iconType" width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M24 21h-3l1-3h1l1 3zm-12.976-4.543l8.976-4.575v6.118c-1.007 2.041-5.607 3-8.5 3-3.175 0-7.389-.994-8.5-3v-6.614l8.024 5.071zm11.976.543h-1v-7.26l-10.923 5.568-11.077-7 12-5.308 11 6.231v7.769z"/></svg>',
     "Federal Student Loan":
-      '<svg class="iconType" width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M1 24h-1v-2h.998l.014-9h3.988v-3h2v3h2v-3h2v3h2v-3h2v3h2v-3h2v3h4v9h1v2h-23zm20-7h-18v5h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-5zm-6-15h-3v1c2.966 0 6.158 1.979 7 6h-14c.547-3.78 3.638-5.827 6-6v-3h4v2z"/></svg>',
+      '<svg class="iconType" width="50" height="45" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M1 24h-1v-2h.998l.014-9h3.988v-3h2v3h2v-3h2v3h2v-3h2v3h2v-3h2v3h4v9h1v2h-23zm20-7h-18v5h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-3c0-.552.448-1 1-1s1 .448 1 1v3h2v-5zm-6-15h-3v1c2.966 0 6.158 1.979 7 6h-14c.547-3.78 3.638-5.827 6-6v-3h4v2z"/></svg>',
     "Credit Card":
       '<svg class="iconType" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24"><path d="M0 8v-2c0-1.104.896-2 2-2h20c1.104 0 2 .896 2 2v2h-24zm24 3v7c0 1.104-.896 2-2 2h-20c-1.104 0-2-.896-2-2v-7h24zm-15 5h-6v1h6v-1zm3-2h-9v1h9v-1zm9 0h-3v1h3v-1z"/></svg>',
     "Car Loan":
@@ -87,7 +88,28 @@ function toolListeners() {
   let selectHandler = (el) => {
     let viewMode = localStorage.getItem("viewMode");
     if (!el.classList.contains("active-view")) {
-      viewMode === "list" ? renderSelectList() : selectGridRender();
+      viewMode === "list" ? renderSelectableList() : renderSelectableGrid();
+      document
+        .getElementById("multiselect-actions")
+        .addEventListener("click", (event) => {
+          let target = event.target.closest("li button");
+          if (!target) return;
+
+          switch (target.id) {
+            case "exit-multiselect":
+              exitMultiselect();
+              break;
+            case "all-multiselect":
+              selectAll();
+              break;
+            case "delete-multiselect":
+              deleteSelections();
+              break;
+            default:
+              console.log("CLICK A BUTTON!!!");
+              break;
+          }
+        });
       el.classList.add("active-view");
     } else {
       exitMultiselect();
@@ -123,10 +145,79 @@ function newEntryListener() {
   });
 }
 
-function clickDelegator(event){
-    let target = event.target.closest("button.arrow");
-    if (!target) return;
-    target.classList.toggle("active");
+function clickDelegator(event) {
+  let target = event.target.closest("button.arrow");
+  if (!target) return;
+  let els = Array.from(elements.loanContainer.querySelectorAll("button.arrow"));
+  els.forEach((el) => {
+    el.classList.remove("active");
+  });
+
+  target.classList.toggle("active");
+}
+
+function gridSelectDelegator(event) {
+  let target = event.target.closest("div.loan");
+  if (!target) return;
+  let maxItems = document.querySelectorAll(".loan").length;
+  let selected = document.getElementById("select-count");
+
+  if (selectedItemsArray.includes(target.id)) {
+    target.classList.remove("selected");
+    selectedItemsArray = selectedItemsArray.filter((i) => i !== target.id);
+    selected.textContent = `${selectedItemsArray.length} selected`;
+    if (selectedItemsArray.length < maxItems) {
+      document.getElementById("all-multiselect").textContent = "Select All";
+      allSelected = false;
+    }
+  } else if (!selectedItemsArray.includes(target.id)) {
+    target.classList.add("selected");
+    selectedItemsArray.push(target.id);
+
+    selected.textContent = `${selectedItemsArray.length} selected`;
+    if (
+      selectedItemsArray.length > 0 &&
+      selectedItemsArray.length === maxItems
+    ) {
+      document.getElementById("all-multiselect").textContent = "Unselect All";
+      allSelected = true;
+    }
+  }
+}
+
+function listSelectDelegator(event) {//clicking on the row adds 1 entry to the array, but when clicking on the box 2 entries will be added.
+  let row = event.target.closest(".selectable-row");
+  if(!row) return;
+  let maxItems = document.querySelectorAll(".loan").length;
+  let selected = document.getElementById("select-count");
+  let allBtn = document.getElementById("all-multiselect");
+
+  const checkbox = row.querySelector(".checkbox");
+  checkbox.checked = !checkbox.checked;//This line is so that is the row is clicked instead of the checkbox, the check will still appear. Without this line the check will not appear if the box is not clicked directly.
+  row.classList.toggle("selected", checkbox.checked)
+  const isChecked = checkbox.checked;
+
+  // row.classList.toggle("selected", checkbox.checked);
+
+  if(!isChecked) {
+    selectedItemsArray = selectedItemsArray.filter(i => i !== row.id);//Remove item
+    console.log(selectedItemsArray);
+    // row.classList.remove('selected');
+  } else{
+    selectedItemsArray.push(row.id);//Add element
+    console.log(selectedItemsArray);
+    // row.classList.add('selected');
+  }
+
+  selected.textContent = `${selectedItemsArray.length} selected`;
+
+  if(selectedItemsArray.length === maxItems){
+    allBtn.textContent = "Unselect All";
+    allSelected = true;
+  }else{
+    allBtn.textContent = "Select All";
+    allSelected = false;
+  }
 }
 
 function showEmpty() {
@@ -159,6 +250,7 @@ function showEmpty() {
 function addToList(loanListContainer, dataObj) {
   updateLocalStorage(dataObj);
 
+  //If an item is added with an initially empty table, build the table first
   if (!loanListContainer) {
     elements.loanContainer.replaceChildren();
     loanListContainer = document.createElement("table"); //the table where the items will display
@@ -178,28 +270,14 @@ function addToList(loanListContainer, dataObj) {
     elements.loanContainer.appendChild(loanListContainer);
   }
 
-  let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
+  loanListContainer.appendChild(generateListItem(dataObj));
 
-  let fields = [
-    loanName,
-    `$${Number.parseFloat(balance).toFixed(2)}`,
-    `${Number.parseFloat(rate).toFixed(2)}%`,
-    `$${Number.parseFloat(minPayment).toFixed(2)}`,
-    order,
-  ];
+  modal.remove();
+  elements.backdrop.style.visibility = "hidden";
+}
 
-  let trElement = document.createElement("tr");
-  trElement.classList.add("loan");
-  trElement.id = `group-${id}`;
-
-  fields.forEach((field) => {
-    let tdElement = document.createElement("td");
-    tdElement.textContent = field;
-    trElement.appendChild(tdElement);
-  });
-  trElement.appendChild(generateDropdown(id));
-
-  loanListContainer.appendChild(trElement);
+function addToGrid(loanGridContainer, dataObj) {
+  loanGridContainer.appendChild(generateGridItem(dataObj, false));
 
   modal.remove();
   elements.backdrop.style.visibility = "hidden";
@@ -213,7 +291,10 @@ function updateListItem(loanEl, dataObj) {
     `$${Number.parseFloat(balance).toFixed(2)}`,
     `${Number.parseFloat(rate).toFixed(2)}%`,
     `$${Number.parseFloat(minPayment).toFixed(2)}`,
-    order.split(/[-\s]/).filter(word => word !== 'Payments').join(' '),
+    order
+      .split(/[-\s]/)
+      .filter((word) => word !== "Payments")
+      .join(" "),
   ];
 
   loanEl.replaceChildren();
@@ -222,15 +303,16 @@ function updateListItem(loanEl, dataObj) {
     tdElement.textContent = field;
     loanEl.appendChild(tdElement);
   });
-  let tdElement = document.createElement("td")
+  let tdElement = document.createElement("td");
   tdElement.appendChild(generateDropdown(id));
-  loanEl.appendChild(tdElement)
+  loanEl.appendChild(tdElement);
+
   modal.remove();
   elements.backdrop.style.visibility = "hidden";
 }
 
-function updateGridItem(infoContainer, dataObj){
-  infoContainer.replaceChildren()//empty the container
+function updateGridItem(infoContainer, dataObj) {
+  infoContainer.replaceChildren(); //empty the container
   let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
 
   const fields = [
@@ -266,19 +348,19 @@ function updateGridItem(infoContainer, dataObj){
     liElement.className = "info-row";
 
     if (field.svg) {
-      let aElement = document.createElement("a");//add svg
+      let aElement = document.createElement("a"); //add svg
       aElement.className = "info-svg";
       aElement.insertAdjacentHTML("afterbegin", field.svg);
       liElement.appendChild(aElement);
 
-      let spanElement = document.createElement("span");//add label
+      let spanElement = document.createElement("span"); //add label
       spanElement.className = "label";
       spanElement.textContent = `${field.label}`;
       liElement.appendChild(spanElement);
     }
 
-    let spanElement = document.createElement("span");//add data value
-    spanElement.className = "data"
+    let spanElement = document.createElement("span"); //add data value
+    spanElement.className = "data";
     spanElement.textContent = field.value;
 
     liElement.appendChild(spanElement);
@@ -287,11 +369,11 @@ function updateGridItem(infoContainer, dataObj){
   });
 
   let liElement = document.createElement("li");
-  liElement.className = "paymentOrder"
+  liElement.className = "paymentOrder";
   liElement.textContent = order
-        .split(/[-\s]/)
-        .filter((word) => word !== "Payments")
-        .join(" ")
+    .split(/[-\s]/)
+    .filter((word) => word !== "Payments")
+    .join(" ");
   infoContainer.appendChild(liElement);
   modal.remove();
   elements.backdrop.style.visibility = "hidden";
@@ -427,13 +509,12 @@ function updateEntry(event, dataObj) {
     );
   } else {
     updateGridItem(
-      document.getElementById(`group-${dataObj.id}`).querySelector(".info-container"),
+      document
+        .getElementById(`group-${dataObj.id}`)
+        .querySelector(".info-container"),
       UpdatedDataObj
     );
   }
-
-  modal.remove();
-  backdrop.style.visibility = "hidden";
 }
 
 function generateDropdown(identifier) {
@@ -485,7 +566,7 @@ function generateSelectMenu(menuName, stringArray, selected = null) {
   let menuLabel = document.createElement("label");
   menuLabel.textContent = `${menuName}: `;
   menuLabel.htmlFor = `${menuName}`;
-  menuLabel.className = "inputLabel"
+  menuLabel.className = "inputLabel";
   menuContainer.appendChild(menuLabel);
 
   let selectElement = document.createElement("select");
@@ -525,10 +606,10 @@ function generateModalContent(heading, buttonOptions) {
   modal.appendChild(headingElement);
   let nameInput = document.createElement("input");
   let nameLabel = document.createElement("label");
-  let divElement = document.createElement("div")
-  nameLabel.htmlFor = "loanName: "
-  nameLabel.textContent = "Loan Name"
-  nameLabel.className = "inputLabel"
+  let divElement = document.createElement("div");
+  nameLabel.htmlFor = "loanName: ";
+  nameLabel.textContent = "Loan Name";
+  nameLabel.className = "inputLabel";
   nameInput.dataset.cell = "loan name";
   nameInput.type = "text";
   nameInput.maxLength = 26;
@@ -548,7 +629,7 @@ function generateModalContent(heading, buttonOptions) {
   balanceInput.dataset.cell = "balance";
   balanceInput.type = "number";
   balanceInput.min = "0";
-  balanceInput.step = "0.01"
+  balanceInput.step = "0.01";
   balanceInput.id = "loanBalance";
   balanceInput.classList.add("loan-input", "digits");
   balanceInput.name = "loanBalance";
@@ -561,7 +642,7 @@ function generateModalContent(heading, buttonOptions) {
   divElement = document.createElement("div");
   nameLabel.htmlFor = "loanRate";
   nameLabel.textContent = "Interest APR(%)";
-  nameLabel.className = "inputLabel"
+  nameLabel.className = "inputLabel";
   interestInput.dataset.cell = "interest rate";
   interestInput.type = "number";
   interestInput.id = "loanRate";
@@ -582,7 +663,7 @@ function generateModalContent(heading, buttonOptions) {
   nameLabel.className = "inputLabel";
   minPaymentInput.dataset.cell = "minimum payment";
   minPaymentInput.type = "number";
-  minPaymentInput.id = "minPayment"
+  minPaymentInput.id = "minPayment";
   minPaymentInput.min = "0";
   minPaymentInput.step = "0.01";
   minPaymentInput.placeholder = "$0.00";
@@ -718,7 +799,7 @@ function openEditModal(identifier) {
 function listView() {
   const [listView, gridView] =
     elements.viewToggleContainer.querySelectorAll("button");
-    elements.loanContainer.removeEventListener("click", clickDelegator)
+  elements.loanContainer.removeEventListener("click", clickDelegator);
 
   if (selectMode) {
     //display change was done while selectMode was on
@@ -727,7 +808,7 @@ function listView() {
     localStorage.setItem("viewMode", "list"); //Update viewMode in local storage
     elements.loanContainer.classList.replace("grid", "list"); //display chage was made so repalce grid class for list class
 
-    renderSelectList(); //Finally render in select mode
+    renderSelectableList(); //Finally render in select mode
   } else {
     //Display change was made out of select mode
     listView.classList.remove("active-view");
@@ -743,33 +824,61 @@ function listView() {
   gridView.classList.remove("active-view");
 }
 
-function generateListItem(dataObj){
+function generateListItem(dataObj, selectMode) {
   let { id, loanName, balance, rate, minPayment, order } = dataObj;
 
-  const tr = document.createElement("tr"); //create a row container
-  tr.classList.add("loan");
-  tr.id = `group-${id}`;
+  const trElement = document.createElement("tr"); //create a row container
+  trElement.classList.add("loan");
+  trElement.id = `group-${id}`;
 
   const fields = [
     loanName,
     `$${Number.parseFloat(balance).toFixed(2)}`,
     `${Number.parseFloat(rate).toFixed(2)}%`,
     `$${Number.parseFloat(minPayment).toFixed(2)}`,
-    order.split(/[-\s]/).filter(word => word !== 'Payments').join(' '),
+    order
+      .split(/[-\s]/)
+      .filter((word) => word !== "Payments")
+      .join(" "),
   ];
 
   //loop through the fields to generate table data
   fields.forEach((text) => {
     const td = document.createElement("td"); //create a table data element
     td.textContent = text;
-    tr.appendChild(td);
+    trElement.appendChild(td);
   });
 
-  const tdDropdown = document.createElement("td"); //create dropdown container
-  tdDropdown.appendChild(generateDropdown(id)); //insert dropdown content
-  tr.appendChild(tdDropdown); //insert the completed dropdown to the row
+  if (selectMode) {
+    trElement.classList.add('selectable-row')
+    let tdElement = document.createElement("td");
+    let checkLabel = document.createElement("label");
+    checkLabel.className = "checkbox-container";
 
-  return tr
+    let inputElement = document.createElement("input");
+    inputElement.type = "checkbox";
+    inputElement.className = "checkbox";
+    inputElement.id = `check-${id}`;
+
+    let spanElement = document.createElement("span");
+    spanElement.className = "checkmark";
+
+    checkLabel.appendChild(inputElement);
+    checkLabel.appendChild(spanElement);
+    tdElement.appendChild(checkLabel);
+    trElement.appendChild(tdElement);
+    if (selectedItemsArray && selectedItemsArray.includes(`group-${id}`)) {
+      let checkbox = trElement.querySelector(".checkbox");
+      checkbox.checked = !checkbox.checked;
+      trElement.classList.toggle("selected", checkbox.checked);
+    }
+  } else {
+    const tdDropdown = document.createElement("td"); //create dropdown container
+    tdDropdown.appendChild(generateDropdown(id)); //insert dropdown content
+    trElement.appendChild(tdDropdown); //insert the completed dropdown to the row
+  }
+
+  return trElement;
 }
 
 function updateList() {
@@ -827,7 +936,7 @@ function gridView() {
   listView.classList.remove("active-view");
 }
 
-function generateGridItem(dataObj) {
+function generateGridItem(dataObj, selectMode) {
   let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
 
   let itemContainer = document.createElement("div");
@@ -842,7 +951,7 @@ function generateGridItem(dataObj) {
 
   let tooltip = document.createElement("span");
   tooltip.className = "tooltip";
-  tooltip.textContent = loanType
+  tooltip.textContent = loanType;
 
   aElement.appendChild(tooltip);
   title.appendChild(aElement);
@@ -852,7 +961,9 @@ function generateGridItem(dataObj) {
   name.textContent = loanName;
   title.appendChild(name);
 
-  title.appendChild(generateDropdown(id));
+  selectMode
+    ? itemContainer.classList.add("selectable")
+    : title.appendChild(generateDropdown(id));
 
   itemContainer.appendChild(title); //Rebuld the rest of the loan Item, it will be glorious!
 
@@ -883,11 +994,8 @@ function generateGridItem(dataObj) {
       value: `$${Number.parseFloat(minPayment).toFixed(2)}/month`,
     },
   ];
-  //The loan Type icon might need a tooltip
-  //Each data field will go in a parent container with svg, label, and data value
-  //fields array needs the svgs that go with the labels
 
-  let ulElement = document.createElement("ul"); //Might need to remake the fields array to make building this card easier, how will you add the payment order without a reference to the min payment row?
+  let ulElement = document.createElement("ul");
   ulElement.className = "info-container";
 
   fields.forEach((field) => {
@@ -895,19 +1003,19 @@ function generateGridItem(dataObj) {
     liElement.className = "info-row";
 
     if (field.svg) {
-      let aElement = document.createElement("a");//add svg
+      let aElement = document.createElement("a"); //add svg
       aElement.className = "info-svg";
       aElement.insertAdjacentHTML("afterbegin", field.svg);
       liElement.appendChild(aElement);
 
-      let spanElement = document.createElement("span");//add label
+      let spanElement = document.createElement("span"); //add label
       spanElement.className = "label";
       spanElement.textContent = `${field.label}`;
       liElement.appendChild(spanElement);
     }
 
-    let spanElement = document.createElement("span");//add data value
-    spanElement.className = "data"
+    let spanElement = document.createElement("span"); //add data value
+    spanElement.className = "data";
     spanElement.textContent = field.value;
 
     liElement.appendChild(spanElement);
@@ -917,11 +1025,11 @@ function generateGridItem(dataObj) {
   });
 
   let liElement = document.createElement("li");
-  liElement.className = "paymentOrder"
+  liElement.className = "paymentOrder";
   liElement.textContent = order
-        .split(/[-\s]/)
-        .filter((word) => word !== "Payments")
-        .join(" ")
+    .split(/[-\s]/)
+    .filter((word) => word !== "Payments")
+    .join(" ");
   ulElement.appendChild(liElement);
 
   return itemContainer;
@@ -937,10 +1045,154 @@ function updateGrid() {
   elements.loanContainer.className = "grid";
 
   loanData.forEach((dataObj) => {
-    elements.loanContainer.appendChild(generateGridItem(dataObj));
+    elements.loanContainer.appendChild(generateGridItem(dataObj, false));
   });
 
   elements.loanContainer.addEventListener("click", clickDelegator);
+}
+
+function renderSelectableGrid() {
+  elements.loanContainer.replaceChildren();
+  elements.loanContainer.removeEventListener("click", clickDelegator);
+  elements.loanContainer.addEventListener("click", gridSelectDelegator);
+
+  if (!selectedItemsArray) {
+    selectedItemsArray = [];
+  }
+
+  loanData.forEach((dataObj) => {
+    let item = generateGridItem(dataObj, true);
+    if (selectedItemsArray && selectedItemsArray.includes(item.id)) {
+      item.classList.add("selected");
+    }
+    elements.loanContainer.appendChild(item);
+  });
+
+  let ulElement = document.createElement("ul");
+  ulElement.id = "multiselect-actions";
+
+  let actions = [
+    { label: "Select All", action: "all-multiselect" },
+    { label: "Cancel", action: "exit-multiselect" },
+    { label: "Delete", action: "delete-multiselect" },
+  ];
+
+  actions.forEach(({ label, action }) => {
+    let liElement = document.createElement("li");
+    let button = document.createElement("button");
+    button.textContent = label;
+    button.id = action;
+    button.className = "actions";
+    liElement.appendChild(button);
+    ulElement.appendChild(liElement);
+  });
+
+  let liElement = document.createElement("li");
+  let pElement = document.createElement("p");
+  pElement.textContent = `0 selected`;
+  pElement.id = "select-count";
+  liElement.appendChild(pElement);
+  ulElement.appendChild(liElement);
+
+  elements.tableToolbar.appendChild(ulElement);
+}
+
+//This function need spacial attention, might just write it from scratch. V1 and V2 are very different.
+function deleteSelections() {
+  if (selectedItemsArray && selectedItemsArray.length > 0) {
+    //Deletions aren't working properly, storage issue? also make sure we are removing DOM elements after deletion is commited.
+    selectedItemsArray.forEach((item) => {
+      let identifier = item.split("-")[1];
+      let dataArrIndex = loanData.findIndex((item) => item.id === identifier);
+
+      loanData.splice(dataArrIndex, 1);
+      document.getElementById(`${item}`).remove();
+    });
+
+    selectedItemsArray = null;
+    document.getElementById("select-count").remove();
+    localStorage.setItem("LMPData", JSON.stringify(loanData));
+
+    let viewMode = localStorage.getItem("viewMode");
+    viewMode === "list" ? listView() : gridView();
+
+    document.getElementById("multise;ect-actions").remove();
+    document.getElementById("multi-select").classList.remove("active-view");
+  } else {
+    let counter = document.getElementById("select-count");
+    counter.classList.add("noneSelected");
+    setTimeout(() => {
+      counter.classList.remove("noneSelected");
+    }, 800);
+  }
+}
+
+function exitMultiselect() {
+  let items = document.querySelectorAll(".selectable");
+  items.forEach((item) => {
+    item.remove();
+  });
+  let viewMode = localStorage.getItem("viewMode");
+  selectedItemsArray = null;
+  selectMode = false;
+  document.getElementById("multi-select").classList.remove("active-view");
+  document.getElementById("multiselect-actions")
+    ? document.getElementById("multiselect-actions").remove()
+    : null;
+  viewMode === "list" ? listView() : gridView();
+}
+
+function selectAll() {
+  let allCards = allSelected
+    ? selectedItemsArray
+    : document.querySelectorAll(".loan");
+
+  if (!selectedItemsArray) selectedItemsArray = [];
+
+  allSelected = !allSelected;
+
+  let item;
+  let text = document.getElementById("all-multiselect");
+
+  viewMode === "list"
+    ? (document.getElementById("select-all").checked = selectAll)
+    : null;
+
+  //If allSelected is true, 'allCards' stores html elements
+  //if it's false 'allcards' stores IDs
+  if (allSelected) {
+    allCards.forEach((card) => {
+      selectedItemsArray.includes(card.id)
+        ? null
+        : selectedItemsArray.push(card.id);
+      if(localStorage.getItem('viewMode') == "list") {
+        card.querySelector(".checkbox").checked = true
+      }
+      card.classList.add("selected");
+    });
+    text.textContent = "Unselect All";
+  } else {
+    allCards.forEach((card) => {
+      item = document.getElementById(`${card}`);
+      if (localStorage.getItem("viewMode") === "list") {
+        item.querySelector(".checkbox").checked = allSelected;
+        document.getElementById("select-all").checked = allSelected;
+      }
+      item.classList.remove("selected");
+    });
+    text.textContent = "Select All";
+  }
+
+  if (!allSelected) {
+    selectedItemsArray = [];
+    allCards = [];
+  }
+
+  selectedItemsArray
+    ? (document.getElementById(
+        "select-count"
+      ).textContent = `${selectedItemsArray.length} selected`)
+    : (document.getElementById("select-count").textContent = `0 selected`);
 }
 
 function updateLoanContainer() {
@@ -972,7 +1224,13 @@ function updateLoanContainer() {
 }
 
 function renderSelectableList() {
-  let loanListContainer = document.createElement("table");
+  elements.loanContainer.replaceChildren();//Clear current UI elements
+
+  // Remove any existing event listeners
+  elements.loanContainer.removeEventListener("click", listSelectDelegator);
+  elements.loanContainer.removeEventListener("click", clickDelegator);
+
+  let loanListContainer = document.createElement("table"); //parent table element
   loanListContainer.id = "loan-list";
 
   const boilerplate = `
@@ -992,64 +1250,19 @@ function renderSelectableList() {
   loanListContainer.insertAdjacentHTML("afterbegin", boilerplate);
   selectMode = true;
 
-  loanData.forEach(
-    ({ id, loanName, balance, rate, minPayment, order, loanType }) => {
-      //builds the table with saved selections
-      let trElement = document.createElement("tr");
-      trElement.classList.add("loan", "selectable-row");
-      trElement.id = `group-${id}`;
+  loanData.forEach(dataObj => loanListContainer.appendChild(generateListItem(dataObj, true)));
+  if (!selectedItemsArray) {
+    selectedItemsArray = [];
+  }
 
-      let fields = [loanName, balance, rate, minPayment, order];
-
-      fields.forEach((field) => {
-        let tdElement = document.createElement("td");
-        tdElement.textContent = field;
-        trElement.appendChild(tdElement);
-      });
-
-      let tdElement = document.createElement("td");
-      let checkLabel = document.createElement("label");
-      checkLabel.className = "checkbox-Container";
-
-      let inputElement = document.createElement("input");
-      inputElement.type = "checkbox";
-      inputElement.className = "checkbox";
-      inputElement.id = `check-${id}`;
-
-      let spanElement = document.createElement("span");
-      spanElement.className = "checkmark";
-
-      checkLabel.appendChild(inputElement);
-      checkLabel.appendChild(spanElement);
-      tdElement.appendChild(checkLabel);
-      trElement.appendChild(tdElement);
-
-      if (selectedItemsArray && selectedItemsArray.includes(`group-${id}`)) {
-        let checkbox = trElement.querySelector(".checkbox");
-        checkbox.checked = !checkbox.checked;
-        trElement.classList.toggle("selected", checkbox.checked);
-      }
-      loanListContainer.appendChild(trElement);
-    }
-  );
-
-  let selectHandler = (event) => {
-    let row = event.target.closest("tr.selectable-row");
-    if (!row) return;
-
-    const checkbox = row.querySelector(".checkbox");
-    checkbox.checked = !checkbox.checked;
-
-    row.classList.toggle("selected", checkbox.checked);
-
-    selectListItem(row); //Still need to implement this function
-  };
-
-  loanListContainer.addEventListener("click", (e) => {
-    selectHandler(e);
-  });
+  loanListContainer.addEventListener("click", listSelectDelegator);
 
   elements.loanContainer.appendChild(loanListContainer);
+
+  document.getElementById("select-all").addEventListener("change", (event)=>{
+    event.stopPropagation();
+    selectAll();
+  })
 
   //If actions container is in the DOM already it will be removed and re-added for listener attachment purposes
   let existingActionsContainer = document.getElementById("multiselect-actions");
@@ -1065,10 +1278,10 @@ function renderSelectableList() {
     {
       id: "delete-multiselect",
       content: "Delete",
-      listener: deleteMultiselect,
+      listener: deleteSelections,
     },
     {
-      id: "selected-count",
+      id: "select-count",
       content: `${selectedItemsArray ? selectedItemsArray.length : 0} selected`,
     },
   ];
@@ -1082,17 +1295,18 @@ function renderSelectableList() {
       btnElement.textContent = item.content;
       liELement.appendChild(btnElement);
     } else {
-      const spanElement = document.createElement("span");
-      spanElement.id = item.id;
-      spanElement.textContent = item.content;
-      liELement.appendChild(spanElement);
+      const pElement = document.createElement("p");
+      pElement.id = item.id;
+      pElement.textContent = item.content;
+      liELement.appendChild(pElement);
     }
 
-    ulElement.appendChild(li);
+    ulElement.appendChild(liELement);
   });
 
-  elements.utilities.appendChild(ulElement);
+  elements.tableToolbar.appendChild(ulElement);
 }
+
 window.addEventListener("DOMContentLoaded", (e) => {
   updateLoanContainer();
   viewListeners();
