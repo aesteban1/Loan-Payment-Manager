@@ -380,7 +380,7 @@ h1 {
   cursor: pointer;
 }
 .list .selected > * {
-  background-color: rgba(130, 93, 175, 0.5);
+  background-color: rgba(105, 80, 190, 0.5);
 }
 .list .selectable-row {
   cursor: pointer;
@@ -437,7 +437,7 @@ h1 {
   align-content: center;
 }
 .list .loan td {
-  color: #d4b6f9;
+  color: #e9e9e9;
   text-shadow: 2px 3px 4px #121212;
   font-size: 1.1rem;
   font-weight: 600;

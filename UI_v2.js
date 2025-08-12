@@ -12,7 +12,7 @@ let allSelected = false;
 let modal; //This item is generated, and deleted constantly.
 
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
-const viewMode = localStorage.getItem("viewMode") || "empty";
+let viewMode = localStorage.getItem("viewMode") || "empty";
 
 const svgArray = {
   loanType: {
@@ -59,7 +59,7 @@ function viewListeners() {
       .querySelector("#grid-view")
       .classList.contains("active-view")
   ) {
-    !elements.viewToggleContainer
+    elements.viewToggleContainer
       .querySelector("#grid-view")
       .classList.add("active-view");
   }
@@ -84,38 +84,31 @@ function viewListeners() {
   });
 }
 
+let selectHandler = () => {
+    document
+      .getElementById("multiselect-actions")
+      .addEventListener("click", (event) => {
+        let target = event.target.closest("li button");
+        if (!target) return;
+
+        switch (target.id) {
+          case "exit-multiselect":
+            exitMultiselect();
+            break;
+          case "all-multiselect":
+            selectAll();
+            break;
+          case "delete-multiselect":
+            deleteSelections();
+            break;
+          default:
+            return
+            break;
+        }
+      });
+};  
+
 function toolListeners() {
-  let selectHandler = (el) => {
-    let viewMode = localStorage.getItem("viewMode");
-    if (!el.classList.contains("active-view")) {
-      viewMode === "list" ? renderSelectableList() : renderSelectableGrid();
-      document
-        .getElementById("multiselect-actions")
-        .addEventListener("click", (event) => {
-          let target = event.target.closest("li button");
-          if (!target) return;
-
-          switch (target.id) {
-            case "exit-multiselect":
-              exitMultiselect();
-              break;
-            case "all-multiselect":
-              selectAll();
-              break;
-            case "delete-multiselect":
-              deleteSelections();
-              break;
-            default:
-              console.log("CLICK A BUTTON!!!");
-              break;
-          }
-        });
-      el.classList.add("active-view");
-    } else {
-      exitMultiselect();
-    }
-  };
-
   let filterHandler = () => {
     //IMPLEMENT FILTER TOOL
     console.log("filter tool clicked!");
@@ -128,8 +121,16 @@ function toolListeners() {
 
   elements.toolsContainer.addEventListener("click", (event) => {
     let target = event.target.closest("button");
+    if(!target) return;
+
     if (target.id === "multi-select") {
-      selectHandler(target);
+      if(target.classList.contains("active-view")){
+        exitMultiselect();
+      }else{
+        localStorage.getItem("viewMode") === "list" ? renderSelectableList() : renderSelectableGrid();
+        selectHandler();
+        target.className = "active-view"
+      }
     } else if (target.id === "filter-entries") {
       filterHandler(); //NEED PARAMETER?
     } else if (target.id === "duplicate-entry") {
@@ -186,28 +187,31 @@ function gridSelectDelegator(event) {
 }
 
 function listSelectDelegator(event) {//clicking on the row adds 1 entry to the array, but when clicking on the box 2 entries will be added.
-  let row = event.target.closest(".selectable-row");
-  if(!row) return;
+  let row = event.target.closest("*");
+  if(row.tagName == "SPAN" || row.closest("tr").id == "header") return;
+
   let maxItems = document.querySelectorAll(".loan").length;
   let selected = document.getElementById("select-count");
   let allBtn = document.getElementById("all-multiselect");
 
-  const checkbox = row.querySelector(".checkbox");
-  checkbox.checked = !checkbox.checked;//This line is so that is the row is clicked instead of the checkbox, the check will still appear. Without this line the check will not appear if the box is not clicked directly.
-  row.classList.toggle("selected", checkbox.checked)
-  const isChecked = checkbox.checked;
+  if(row.tagName === "TD"){
+    row = row.closest(".selectable-row");
+    const checkbox = row.querySelector(".checkbox");
+    checkbox.checked = !checkbox.checked
+  }
 
-  // row.classList.toggle("selected", checkbox.checked);
+  if(row.tagName === "INPUT"){
+    row = row.closest(".selectable-row");
+  }
 
-  if(!isChecked) {
+  if(selectedItemsArray.includes(row.id)) {
     selectedItemsArray = selectedItemsArray.filter(i => i !== row.id);//Remove item
-    console.log(selectedItemsArray);
-    // row.classList.remove('selected');
+    row.classList.remove('selected');
   } else{
     selectedItemsArray.push(row.id);//Add element
-    console.log(selectedItemsArray);
-    // row.classList.add('selected');
+    row.classList.add('selected');
   }
+  console.log(selectedItemsArray)
 
   selected.textContent = `${selectedItemsArray.length} selected`;
 
@@ -222,7 +226,8 @@ function listSelectDelegator(event) {//clicking on the row adds 1 entry to the a
 
 function showEmpty() {
   elements.loanContainer.replaceChildren();
-  elements.loanContainer.classList.add("empty");
+  elements.loanContainer.className = "";
+  elements.loanContainer.className = "empty"
 
   let image = document.createElement("img");
   image.src = "./Assets/Empty List Icon.svg";
@@ -799,26 +804,31 @@ function openEditModal(identifier) {
 function listView() {
   const [listView, gridView] =
     elements.viewToggleContainer.querySelectorAll("button");
-  elements.loanContainer.removeEventListener("click", clickDelegator);
+  elements.loanContainer.removeEventListener("click", listSelectDelegator);
+  loanData.length === 0 ? selectMode = false : null;
 
   if (selectMode) {
     //display change was done while selectMode was on
     document.getElementById("multiselect-actions").remove(); //remove the old counter, since render function will be adding one.
 
     localStorage.setItem("viewMode", "list"); //Update viewMode in local storage
-    elements.loanContainer.classList.replace("grid", "list"); //display chage was made so repalce grid class for list class
-
-    renderSelectableList(); //Finally render in select mode
+    elements.loanContainer.classList.replace("grid", "list"); //display change was made so repalce grid class for list class
+    if(loanData.length > 0){
+      renderSelectableList(); //Finally render in select mode
+      selectHandler();
+    }
   } else {
     //Display change was made out of select mode
     listView.classList.remove("active-view");
     gridView.classList.remove("active-view"); //clear all viewmodes
 
     // elements.loanContainer.classList.replace("grid", "list");
-    elements.className = ""; //clear all other classes, might have empty or grid toggled
-    elements.className = "list"; //add the relevant class
+    elements.loanContainer.className = ""; //clear all other classes, might have empty or grid toggled
+    elements.loanContainer.className = "list"; //add the relevant class
     updateList();
-    localStorage.setItem("viewMode", "list");
+    if(loanData.length > 0){
+      localStorage.setItem("viewMode", "list");
+    }
   }
   listView.classList.add("active-view");
   gridView.classList.remove("active-view");
@@ -916,21 +926,22 @@ function updateList() {
 function gridView() {
   const [listView, gridView] =
     elements.viewToggleContainer.querySelectorAll("button");
+  loanData.length === 0 ? selectMode = false : null;
 
   if (selectMode) {
     localStorage.setItem("viewMode", "grid");
     elements.loanContainer.classList.replace("list", "grid");
-
-    selectGridRender();
+      renderSelectableGrid();
+      selectHandler();
   } else {
     listView.classList.remove("active-view");
     gridView.classList.remove("active-view");
 
-    if (!gridView.classList.contains("active-view")) {
-      elements.loanContainer.classList.replace("list", "grid");
+      elements.loanContainer.className = "grid"
       updateGrid();
-      localStorage.setItem("viewMode", "grid");
-    }
+      if(loanData.length > 0){
+        localStorage.setItem("viewMode", "grid");
+      }
   }
   gridView.classList.add("active-view");
   listView.classList.remove("active-view");
@@ -1052,10 +1063,13 @@ function updateGrid() {
 }
 
 function renderSelectableGrid() {
+  selectMode = true;
   elements.loanContainer.replaceChildren();
-  elements.loanContainer.removeEventListener("click", clickDelegator);
+  elements.loanContainer.removeEventListener("click", listSelectDelegator);
   elements.loanContainer.addEventListener("click", gridSelectDelegator);
-
+  if(document.getElementById("multiselect-actions")){
+    document.getElementById("multiselect-actions").remove();
+  }
   if (!selectedItemsArray) {
     selectedItemsArray = [];
   }
@@ -1072,7 +1086,7 @@ function renderSelectableGrid() {
   ulElement.id = "multiselect-actions";
 
   let actions = [
-    { label: "Select All", action: "all-multiselect" },
+    { label: allSelected ? "Unselect All" : "Select All", action: "all-multiselect" },
     { label: "Cancel", action: "exit-multiselect" },
     { label: "Delete", action: "delete-multiselect" },
   ];
@@ -1089,34 +1103,38 @@ function renderSelectableGrid() {
 
   let liElement = document.createElement("li");
   let pElement = document.createElement("p");
-  pElement.textContent = `0 selected`;
+  pElement.textContent = selectedItemsArray ? `${selectedItemsArray.length} selected` : `0 selected`;
   pElement.id = "select-count";
   liElement.appendChild(pElement);
   ulElement.appendChild(liElement);
 
   elements.tableToolbar.appendChild(ulElement);
 }
-
 //This function need spacial attention, might just write it from scratch. V1 and V2 are very different.
 function deleteSelections() {
   if (selectedItemsArray && selectedItemsArray.length > 0) {
     //Deletions aren't working properly, storage issue? also make sure we are removing DOM elements after deletion is commited.
     selectedItemsArray.forEach((item) => {
-      let identifier = item.split("-")[1];
-      let dataArrIndex = loanData.findIndex((item) => item.id === identifier);
+      let identifier = item.split("-").filter(i => i !== "group").join()
+      let dataArrIndex = loanData.findIndex((data) => data.id === identifier);
 
       loanData.splice(dataArrIndex, 1);
-      document.getElementById(`${item}`).remove();
+      document.getElementById(`group-${identifier}`).remove();
     });
+
+    if(loanData.length === 0){
+      localStorage.setItem("viewMode", "empty");
+    }
 
     selectedItemsArray = null;
     document.getElementById("select-count").remove();
-    localStorage.setItem("LMPData", JSON.stringify(loanData));
+    localStorage.setItem("LPMdata", JSON.stringify(loanData));
+    selectMode = false
 
     let viewMode = localStorage.getItem("viewMode");
     viewMode === "list" ? listView() : gridView();
 
-    document.getElementById("multise;ect-actions").remove();
+    document.getElementById("multiselect-actions").remove();
     document.getElementById("multi-select").classList.remove("active-view");
   } else {
     let counter = document.getElementById("select-count");
@@ -1135,6 +1153,7 @@ function exitMultiselect() {
   let viewMode = localStorage.getItem("viewMode");
   selectedItemsArray = null;
   selectMode = false;
+  allSelected = false;
   document.getElementById("multi-select").classList.remove("active-view");
   document.getElementById("multiselect-actions")
     ? document.getElementById("multiselect-actions").remove()
@@ -1143,6 +1162,8 @@ function exitMultiselect() {
 }
 
 function selectAll() {
+  if(loanData.length === 0) return;
+
   let allCards = allSelected
     ? selectedItemsArray
     : document.querySelectorAll(".loan");
@@ -1154,7 +1175,8 @@ function selectAll() {
   let item;
   let text = document.getElementById("all-multiselect");
 
-  viewMode === "list"
+  
+  localStorage.getItem("viewMode") === "list"
     ? (document.getElementById("select-all").checked = selectAll)
     : null;
 
@@ -1227,8 +1249,8 @@ function renderSelectableList() {
   elements.loanContainer.replaceChildren();//Clear current UI elements
 
   // Remove any existing event listeners
-  elements.loanContainer.removeEventListener("click", listSelectDelegator);
-  elements.loanContainer.removeEventListener("click", clickDelegator);
+  elements.loanContainer.removeEventListener("click", gridSelectDelegator);
+  selectMode = true;
 
   let loanListContainer = document.createElement("table"); //parent table element
   loanListContainer.id = "loan-list";
@@ -1248,7 +1270,6 @@ function renderSelectableList() {
         </th>
       </tr>`;
   loanListContainer.insertAdjacentHTML("afterbegin", boilerplate);
-  selectMode = true;
 
   loanData.forEach(dataObj => loanListContainer.appendChild(generateListItem(dataObj, true)));
   if (!selectedItemsArray) {
@@ -1259,7 +1280,9 @@ function renderSelectableList() {
 
   elements.loanContainer.appendChild(loanListContainer);
 
-  document.getElementById("select-all").addEventListener("change", (event)=>{
+  let allBtn = document.getElementById("select-all")
+  allSelected ? allBtn.checked = true : allBtn.checked = false
+  allBtn.addEventListener("change", (event)=>{
     event.stopPropagation();
     selectAll();
   })
@@ -1272,37 +1295,28 @@ function renderSelectableList() {
   let ulElement = document.createElement("ul");
   ulElement.id = "multiselect-actions";
 
-  let listItems = [
-    { id: "all-multiselect", content: "Select All", listener: selectAll },
-    { id: "exit-multiselect", content: "Cancel", listener: exitMultiselect },
-    {
-      id: "delete-multiselect",
-      content: "Delete",
-      listener: deleteSelections,
-    },
-    {
-      id: "select-count",
-      content: `${selectedItemsArray ? selectedItemsArray.length : 0} selected`,
-    },
+  let actions = [
+    { label: allSelected ? "Unselect All" : "Select All", action: "all-multiselect" },
+    { label: "Cancel", action: "exit-multiselect" },
+    { label: "Delete", action: "delete-multiselect" },
   ];
 
-  listItems.forEach((item) => {
-    const liELement = document.createElement("li");
-
-    if (item.listener) {
-      let btnElement = document.createElement("button");
-      btnElement.id = item.id;
-      btnElement.textContent = item.content;
-      liELement.appendChild(btnElement);
-    } else {
-      const pElement = document.createElement("p");
-      pElement.id = item.id;
-      pElement.textContent = item.content;
-      liELement.appendChild(pElement);
-    }
-
-    ulElement.appendChild(liELement);
+  actions.forEach(({ label, action }) => {
+    let liElement = document.createElement("li");
+    let button = document.createElement("button");
+    button.textContent = label;
+    button.id = action;
+    button.className = "actions";
+    liElement.appendChild(button);
+    ulElement.appendChild(liElement);
   });
+
+  let liElement = document.createElement("li");
+  let pElement = document.createElement("p");
+  pElement.textContent = selectedItemsArray ? `${selectedItemsArray.length} selected` : `0 selected`;
+  pElement.id = "select-count";
+  liElement.appendChild(pElement);
+  ulElement.appendChild(liElement);
 
   elements.tableToolbar.appendChild(ulElement);
 }
