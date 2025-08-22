@@ -131,16 +131,16 @@ h1 {
   }
 }
 
-#multiselect-actions {  
-    li {
-      p{
-        padding: 0;
-        margin: 0;
-        font-size: 1.2rem;
-        height: 38px;
-        align-content: center;
-      }
-      button{
+#multiselect-actions {
+  li {
+    p {
+      padding: 0;
+      margin: 0;
+      font-size: 1.2rem;
+      height: 38px;
+      align-content: center;
+    }
+    button {
       cursor: pointer;
       color: #e9e9e9;
       background-color: #2a2a2a;
@@ -165,6 +165,95 @@ h1 {
   #exit-multiselect:hover {
     background-color: #505050;
     color: #ffffff;
+  }
+}
+
+.cc-container {
+  position: relative;
+  overflow: visible;
+  background-color: #343434;
+  border-radius: 20px;
+  outline: 1px solid rgba(160, 160, 160, 0.3);
+  padding: 10px;
+  width: 220px;
+  h3{
+    margin: 10px 0px;
+    text-align: center;
+  }
+  .cc-content {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    height: fit-content;
+    width: 100%;
+    background-color: transparent;
+    .cc-option {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      // background-color: rgba(56, 186, 124, 0.2);
+       > *{
+        cursor: pointer;
+      }
+      .cc-label {
+        width: 100%;
+        font-weight: bolder;
+        font-size: 1rem;
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none;
+        display: flex;
+        align-items: center;
+        .cc-checkbox{
+          height: 0;
+          width: 0;
+          margin: 0;
+          padding: 0;
+        }
+        .cc-checkmark{
+          width: 1rem;
+          height: 1rem;
+          background-color: #808080;
+          outline: 1px solid rgba(160, 160, 160, 0.5);
+          margin: 0 10px 0 0;
+        }
+        .cc-checkbox:checked + .cc-checkmark::after{
+          position: relative;
+          display: inline-block;
+          content: "✓";
+          font-size: 1rem;
+          line-height: 1rem;
+          width: 1rem;
+          height: 1rem;
+          text-align: center;
+        }
+      }
+    }
+    .cc-option:has(.cc-checkbox:checked){
+      background-color: rgba(105, 80, 190, 0.5);
+    }
+  }
+  .cc-apply {
+    cursor: pointer;
+    color: #e9e9e9;
+    background-color: #2a2a2a;
+    outline: 1px solid rgba(160, 160, 160, 0.25);
+    font-weight: bold;
+    transition: all ease-in-out 0.1s;
+    border: none;
+    width: 10ch;
+    height: 2rem;
+    border-radius: 0.5rem;
+    margin: 0px 5px;
+  }
+  .cc-apply:hover{
+    background-color: #6950be;
+    text-shadow: 1px 1px black;
   }
 }
 
@@ -261,8 +350,8 @@ h1 {
     width: 300px;
     outline: 1px solid rgba(160, 160, 160, 0.25);
     &.selected {
-    outline: 1px solid #825dff;
-    animation: 0.3s cubic-bezier(0, -0.01, 0, 1.01) gridSelect;
+      outline: 1px solid #825dff;
+      animation: 0.3s cubic-bezier(0, -0.01, 0, 1.01) gridSelect;
     }
     .loan-title {
       width: 100%;
@@ -390,7 +479,7 @@ h1 {
     width: 100%;
   }
 
-  #header{
+  #header {
     height: 2rem;
   }
   th,
@@ -591,7 +680,7 @@ h1 {
   }
 
   .Update-btn:hover,
-  .Confirm-btn:hover{
+  .Confirm-btn:hover {
     color: #000000;
     background-color: #38ba7c;
   }
