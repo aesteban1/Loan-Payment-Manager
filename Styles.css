@@ -158,14 +158,23 @@ h1 {
   color: #ffffff;
 }
 
+.cc-container.open {
+  height: fit-content;
+  width: 220px;
+  visibility: visible;
+  z-index: 10;
+}
+
 .cc-container {
-  position: relative;
-  overflow: visible;
+  position: absolute;
   background-color: #343434;
   border-radius: 20px;
   outline: 1px solid rgba(160, 160, 160, 0.3);
   padding: 10px;
-  width: 220px;
+  left: 105%;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
 }
 .cc-container h3 {
   margin: 10px 0px;

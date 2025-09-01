@@ -4,7 +4,6 @@ const elements = {
   toolsContainer: document.getElementById("tools"),
   viewToggleContainer: document.getElementById("view-toggle"),
   tableToolbar: document.getElementById("table-toolbar"),
-  // utilities: document.querySelector(".utilities")
 };
 let selectedItemsArray = null;
 let selectMode = false;
@@ -12,12 +11,12 @@ let allSelected = false;
 let modal; //This item is generated, and deleted constantly.
 let columnMap = new Map();
 let initColumnConfig = [
-  {column:"loanName", status: true},
-  {column:"balance", status: true},
-  {column:"rate", status: true},
-  {column:"minPayment", status: true},
-  {column:"order", status: true},
-  {column:"loanType", status: false},
+  { column: "loanName", status: true },
+  { column: "balance", status: true },
+  { column: "rate", status: true },
+  { column: "minPayment", status: true },
+  { column: "order", status: true },
+  { column: "loanType", status: false },
 ];
 const loanData = JSON.parse(localStorage.getItem("LPMdata")) || [];
 let viewMode = localStorage.getItem("viewMode") || "empty";
@@ -57,24 +56,18 @@ let column_view_svg = `
                 </svg>`;
 
 function viewListeners() {
+  let lvBtn = elements.viewToggleContainer.querySelector("#list-view");
+  let gvBtn = elements.viewToggleContainer.querySelector("#grid-view");
   if (
     localStorage.getItem("viewMode") === "list" &&
-    !elements.viewToggleContainer
-      .querySelector("#list-view")
-      .classList.contains("active-view")
+    !lvBtn.classList.contains("active-view")
   ) {
-    elements.viewToggleContainer
-      .querySelector("#list-view")
-      .classList.add("active-view");
+    lvBtn.classList.add("active-view");
   } else if (
     localStorage.getItem("viewMode") === "grid" &&
-    !elements.viewToggleContainer
-      .querySelector("#grid-view")
-      .classList.contains("active-view")
+    !gvBtn.classList.contains("active-view")
   ) {
-    elements.viewToggleContainer
-      .querySelector("#grid-view")
-      .classList.add("active-view");
+    gvBtn.classList.add("active-view");
   }
 
   elements.viewToggleContainer.addEventListener("click", (event) => {
@@ -210,7 +203,7 @@ function gridSelectDelegator(event) {
 
 function listSelectDelegator(event) {
   let row = event.target.closest("*");
-  if (row.tagName == "SPAN" || row.closest("tr").id == "header") return;
+  if (row.tagName == "SPAN" || row.closest("tr").id == "header") return;//Don't register clicks on the header and on inner spans
 
   let maxItems = document.querySelectorAll(".loan").length;
   let selected = document.getElementById("select-count");
@@ -233,7 +226,6 @@ function listSelectDelegator(event) {
     selectedItemsArray.push(row.id); //Add element
     row.classList.add("selected");
   }
-  console.log(selectedItemsArray);
 
   selected.textContent = `${selectedItemsArray.length} selected`;
 
@@ -282,18 +274,19 @@ function addToList(loanListContainer, dataObj) {
     elements.loanContainer.replaceChildren();
     loanListContainer = document.createElement("table"); //the table where the items will display
     loanListContainer.id = "loan-list";
+    let headerFields = {
+      loanName: "Loan Name",
+      balance: "Balance",
+      rate: "Interest Rate",
+      minPayment: "Minimum Payment",
+      order: "Payment Order",
+      loanType: "Loan Type",
+    };
 
-    let htmlString = `
-      <thead>
-        <tr id="header">
-          <th>Loan Name</th>
-          <th>Balance</th>
-          <th>Interest Rate</th>
-          <th>Minimum Payment</th>
-          <th>Payment Order</th>
-        </tr>
-      </thead>`;
-    loanListContainer.insertAdjacentHTML("afterbegin", htmlString); //Simple and static header inserted
+    loanListContainer.insertAdjacentElement(
+      "afterbegin",
+      generateTableHeader(headerFields, false)
+    ); //Dynamic header inserted
     elements.loanContainer.appendChild(loanListContainer);
   }
 
@@ -311,28 +304,7 @@ function addToGrid(loanGridContainer, dataObj) {
 }
 
 function updateListItem(loanEl, dataObj) {
-  let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
-
-  let fields = [
-    loanName,
-    `$${Number.parseFloat(balance).toFixed(2)}`,
-    `${Number.parseFloat(rate).toFixed(2)}%`,
-    `$${Number.parseFloat(minPayment).toFixed(2)}`,
-    order
-      .split(/[-\s]/)
-      .filter((word) => word !== "Payments")
-      .join(" "),
-  ];
-
-  loanEl.replaceChildren();
-  fields.forEach((field) => {
-    let tdElement = document.createElement("td");
-    tdElement.textContent = field;
-    loanEl.appendChild(tdElement);
-  });
-  let tdElement = document.createElement("td");
-  tdElement.appendChild(generateDropdown(id));
-  loanEl.appendChild(tdElement);
+  loanEl.replaceWith(generateListItem(dataObj, false));
 
   modal.remove();
   elements.backdrop.style.visibility = "hidden";
@@ -370,10 +342,16 @@ function confirmEntry(identifier) {
   newDataObj = {
     id: identifier,
     loanName: formData.get("loanName") || identifier,
-    balance: formData.get("loanBalance") || 0,
-    rate: formData.get("loanRate") || 0,
-    minPayment: formData.get("loanMin") || 0,
-    order: formData.get("Payment Order"),
+    balance:
+      `$${Number.parseFloat(formData.get("loanBalance")).toFixed(2)}` || 0,
+    rate: `${Number.parseFloat(formData.get("loanRate")).toFixed(2)}%` || 0,
+    minPayment:
+      `$${Number.parseFloat(formData.get("loanMin")).toFixed(2)}` || 0,
+    order: formData
+      .get("Payment Order")
+      .split(/[-\s]/)
+      .filter((word) => word !== "Payments")
+      .join(" "),
     loanType: formData.get("Loan Type"),
   };
 
@@ -746,10 +724,14 @@ function openEditModal(identifier) {
     let updatedDataObj = {
       id: identifier,
       loanName: formData.get("loanName") || identifier,
-      balance: formData.get("loanBalance") || 0,
-      rate: formData.get("loanRate") || 0,
-      minPayment: formData.get("loanMin") || 0,
-      order: formData.get("Payment Order"),
+      balance: Number.parseFloat(formData.get("loanBalance")).toFixed(2) || 0,
+      rate: Number.parseFloat(formData.get("loanRate")).toFixed(2) || 0,
+      minPayment: Number.parseFloat(formData.get("loanMin")).toFixed(2) || 0,
+      order: formData
+        .get("Payment Order")
+        .split(/[-\s]/)
+        .filter((word) => word !== "Payments")
+        .join(" "),
       loanType: formData.get("Loan Type"),
     };
 
@@ -759,102 +741,100 @@ function openEditModal(identifier) {
   });
 }
 
-let checkListener = (event)=>{
-  let target = event.target.closest('input[type=checkbox]');
-  
-  if(target && target.tagName === "INPUT"){
-    let key = target.id.split('-').filter(i => i !== "cc").toString();
+let checkListener = (event) => {
+  let target = event.target.closest("input[type=checkbox]");
+
+  if (target && target.tagName === "INPUT") {
+    let key = target.id
+      .split("-")
+      .filter((i) => i !== "cc")
+      .toString();
     columnMap.set(key, target.checked);
-  }else{
+  } else {
     return;
   }
-}
+};
 
 function generateColumnOptions() {
   let container = document.createElement("div");
   container.className = "cc-container";
-  container.id = "column-configuration"
+  container.id = "column-configuration";
 
-  let title = document.createElement('h3');
-  title.textContent = "Shown Columns"
+  let title = document.createElement("h3");
+  title.textContent = "Shown Columns";
   container.appendChild(title);
 
   let applyButton = document.createElement("button");
   applyButton.textContent = "Apply";
   applyButton.className = "cc-apply";
-  applyButton.id = "apply-columns"
-  // applyButton.addEventListener('click', ()=>{
-  // let fields = {
-  //   loanName: "Loan Name",
-  //   balance: "Balance",
-  //   rate: "Interest Rate",
-  //   minPayment: "Minimum Payment",
-  //   order: "Payment Order",
-  //   loanType: "Loan Type",
-  // };
-  //   let parent = document.getElementById('loan-list')
-  //   let headerElement = parent.querySelector('thead');
-  //   parent.replaceChild(headerElement, generateTableHeader(fields));
-  //   loanList.forEach((item) =>{
-  //     generateListItem()
-  //   })
-
-  // })
+  applyButton.id = "apply-columns";
 
   let contentContainer = document.createElement("ul");
   contentContainer.className = "cc-content";
 
   let configOptions = [
-    {label: "Loan Name", value: "loanName" },
-    {label:"Loan Balance", value:"balance"},
-    {label:"Interest Rate", value:"rate"},
-    {label:"Minimum Payment", value:"minPayment"},
-    {label:"Payment Order", value:"order"},
-    {label:"Loan Type", value:"loanType"},
+    { label: "Loan Name", value: "loanName" },
+    { label: "Loan Balance", value: "balance" },
+    { label: "Interest Rate", value: "rate" },
+    { label: "Minimum Payment", value: "minPayment" },
+    { label: "Payment Order", value: "order" },
+    { label: "Loan Type", value: "loanType" },
   ];
 
-  configOptions.forEach(item =>{
+  configOptions.forEach((item) => {
     let liElement = document.createElement("li");
     liElement.className = "cc-option";
 
-    let checkbox = document.createElement('input');
+    let checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.className = "cc-checkbox";
-    checkbox.id = `cc-${item.value}`
+    checkbox.id = `cc-${item.value}`;
 
     let customBox = document.createElement("span");
-    customBox.className = "cc-checkmark"
+    customBox.className = "cc-checkmark";
 
-    let label = document.createElement('label');
-    label.htmlFor = `cc-${item.value}`
+    let label = document.createElement("label");
+    label.htmlFor = `cc-${item.value}`;
     label.className = "cc-label";
 
     label.appendChild(checkbox);
     label.appendChild(customBox);
-    label.insertAdjacentText('beforeend', item.label)
+    label.insertAdjacentText("beforeend", item.label);
     liElement.appendChild(label);
     contentContainer.appendChild(liElement);
-  })
+  });
 
-  contentContainer.addEventListener('click', checkListener);
+  contentContainer.addEventListener("click", checkListener);
   container.appendChild(contentContainer);
   container.appendChild(applyButton);
 
   return container;
 }
 
-function generateTableHeader(fields){
-  let thead = document.createElement('thead');
-  let trElement = document.createElement('tr');
-  trElement.id = 'header';
+function generateTableHeader(headerFields, selectMode = false) {
+  let thead = document.createElement("thead");
+  let trElement = document.createElement("tr");
+  trElement.id = "header";
 
-  for(let [data, enabled] of columnMap){
-    if(enabled){
-      let thElement = document.createElement('th');
-      thElement.textContent = fields[data];
+  for (let [data, enabled] of columnMap) {
+    if (enabled) {
+      let thElement = document.createElement("th");
+      thElement.textContent = headerFields[data];
       trElement.appendChild(thElement);
     }
-  };
+  }
+
+  if (selectMode) {
+    let element = `
+      <th>
+        <label class="checkbox-container">
+            <input type="checkbox" class="checkbox" id="select-all"></input>
+            <span class="checkmark"></span>
+        </label>
+      </th>`;
+    trElement.insertAdjacentHTML("beforeend", element);
+  }
+
   thead.appendChild(trElement);
   return thead;
 }
@@ -893,36 +873,16 @@ function listView() {
 }
 
 function generateListItem(dataObj, selectMode) {
-  //Implement the configuration array, so columns can be generated based on user selections.
-  //The array will be used such that: DataObject[String_From_Config]
-  //Loop? What about the different data types? Deciamals? Split Strings? Hmmm...
-  // let { id, loanName, balance, rate, minPayment, order } = dataObj;
-
   const trElement = document.createElement("tr"); //create a row container
   trElement.classList.add("loan");
   trElement.id = `group-${dataObj.id}`;
-  let fields;
-  // const fields = [
-  //   loanName,
-  //   `$${Number.parseFloat(balance).toFixed(2)}`,
-  //   `${Number.parseFloat(rate).toFixed(2)}%`,
-  //   `$${Number.parseFloat(minPayment).toFixed(2)}`,
-  //   order
-  //     .split(/[-\s]/)
-  //     .filter((word) => word !== "Payments")
-  //     .join(" "),
-  // ];
-
-
-    columnMap.forEach(
-      (enabled, value)=>{
-        if(enabled){
-          const td = document.createElement("td"); //create a table data element
-          td.innerText = dataObj[value];
-          trElement.appendChild(td);
-        }
-      }
-    )
+  columnMap.forEach((enabled, value) => {
+    if (enabled) {
+      const td = document.createElement("td"); //create a table data element
+      td.innerText = dataObj[value];
+      trElement.appendChild(td);
+    }
+  });
 
   if (selectMode) {
     trElement.classList.add("selectable-row");
@@ -942,7 +902,10 @@ function generateListItem(dataObj, selectMode) {
     checkLabel.appendChild(spanElement);
     tdElement.appendChild(checkLabel);
     trElement.appendChild(tdElement);
-    if (selectedItemsArray && selectedItemsArray.includes(`group-${dataObj.id}`)) {
+    if (
+      selectedItemsArray &&
+      selectedItemsArray.includes(`group-${dataObj.id}`)
+    ) {
       let checkbox = trElement.querySelector(".checkbox");
       checkbox.checked = !checkbox.checked;
       trElement.classList.toggle("selected", checkbox.checked);
@@ -965,7 +928,10 @@ function updateList() {
     return;
   }
 
-  let fields = {
+  elements.loanContainer.className = "list";
+  let table = document.createElement("table"); //the table where the items will display
+  table.id = "loan-list";
+  let headerFields = {
     loanName: "Loan Name",
     balance: "Balance",
     rate: "Interest Rate",
@@ -973,33 +939,9 @@ function updateList() {
     order: "Payment Order",
     loanType: "Loan Type",
   };
-  document.getElementById('column-configuration') 
-    ? document.getElementById('column-configuration').remove() 
-    : null;
 
-  elements.tableToolbar.appendChild(generateColumnOptions());//This is a temporary spot, it need to be a popup menu.
-
-  let applyButton = document.getElementById('apply-columns');
-  applyButton.addEventListener('click', ()=>{
-    let loanListContainer = document.getElementById('loan-list');
-    loanListContainer.replaceChildren();
-    loanListContainer.appendChild(generateTableHeader(fields));
-
-    loanData.forEach(dataObj => {
-      loanListContainer.appendChild(generateListItem(dataObj,false))});
-  });
-
-  initColumnConfig.forEach(({column, status})=>{
-    document.getElementById(`cc-${column}`).checked = status
-    key = column.split('-').filter((i)=> i !== "cc").toString();
-    columnMap.set(key, status);
-  });
-
-  elements.loanContainer.className = "list";
-  let table = document.createElement("table"); //the table where the items will display
-  table.id = "loan-list";
-
-  table.insertAdjacentElement("afterbegin", generateTableHeader(fields));
+  addColumnConfig(); 
+  table.insertAdjacentElement("afterbegin", generateTableHeader(headerFields));
 
   //Populate the table with the list items
   loanData.forEach((dataObj) => {
@@ -1010,10 +952,75 @@ function updateList() {
   elements.loanContainer.appendChild(table); //completed table is added to the loan container
 }
 
+let toggleConfig = ()=>{
+  let btn = document.getElementById('column-config');
+  let cc = document.getElementById('column-configuration');
+  btn.classList.toggle("active-view");
+  cc.classList.toggle('open');
+
+}
+
+function addColumnConfig(){
+    document.getElementById('config-container')
+    ? document.getElementById("config-container").remove()
+    : null;
+
+  let headerFields = {
+    loanName: "Loan Name",
+    balance: "Balance",
+    rate: "Interest Rate",
+    minPayment: "Minimum Payment",
+    order: "Payment Order",
+    loanType: "Loan Type",
+  };
+
+  let ulElement = document.createElement('ul');
+  ulElement.id = 'config-container'
+  let liElement = document.createElement('li');
+  let settingsBtn = document.createElement('button');
+  settingsBtn.id = 'column-config'
+  settingsBtn.addEventListener('click', toggleConfig)
+  settingsBtn.insertAdjacentHTML('afterbegin', column_view_svg);
+  liElement.appendChild(settingsBtn);
+  ulElement.appendChild(liElement);
+  ulElement.appendChild(generateColumnOptions())
+  elements.tableToolbar.appendChild(ulElement);
+
+  let applyButton = document.getElementById("apply-columns");
+
+  applyButton.addEventListener("click", () => {//When apply is clicked, re-render the table with edited columns.
+    let loanListContainer = document.getElementById("loan-list");
+    document.getElementById('column-configuration').classList.toggle('open');
+    settingsBtn.classList.toggle('active-view');
+    loanListContainer.replaceChildren();
+    loanListContainer.appendChild(generateTableHeader(headerFields));
+
+    loanData.forEach((dataObj) => {
+      loanListContainer.appendChild(generateListItem(dataObj, false));
+    });
+  });
+
+  if (columnMap.size === 0) {
+    initColumnConfig.forEach(({ column, status }) => {
+      document.getElementById(`cc-${column}`).checked = status;
+      key = column
+        .split("-")
+        .filter((i) => i !== "cc")
+        .toString();
+      columnMap.set(key, status);
+    });
+  } else {
+    for (let [key, value] of columnMap) {
+      document.getElementById(`cc-${key}`).checked = value;
+    }
+  }
+}
+
 function gridView() {
   const [listView, gridView] =
     elements.viewToggleContainer.querySelectorAll("button");
   loanData.length === 0 ? (selectMode = false) : null;
+  document.getElementById('column-config') ? document.getElementById('column-config').remove() : null;
 
   if (selectMode) {
     localStorage.setItem("viewMode", "grid");
@@ -1073,7 +1080,8 @@ function generateGridItem(dataObj, selectMode) {
         <path d="M18.489 43.882h6.897a2.507 2.507 0 1 0 0-5.015h-10.03c-6.272 0-8.257 2.613-10.452 4.806L.92 47.153a1.18 1.18 0 0 0-.406.893v11.56a.395.395 0 0 0 .654.298l7.696-6.597c.27-.231.633-.328.983-.266l11.993 2.18a3.17 3.17 0 0 0 2.393-.53s15.308-10.644 16.438-11.585c1.077-.989 1.066-2.423.075-3.501-.989-1.079-2.833-.85-4.065.062-1.128.94-8.831 6.002-8.831 6.002h-9.362l-.03.015a.896.896 0 0 1-.864-.923.896.896 0 0 1 .923-.862z"/>
       </svg>`,
       label: "Balance",
-      value: `$${Number.parseFloat(balance).toFixed(2)}`,
+      // value: `$${Number.parseFloat(balance).toFixed(2)}`,
+      value: balance,
     },
     {
       svg: `
@@ -1081,7 +1089,8 @@ function generateGridItem(dataObj, selectMode) {
         <path d="M7.5 7.5H52.5C53.163 7.5 53.7989 7.76339 54.2678 8.23223C54.7366 8.70107 55 9.33696 55 10V50C55 50.663 54.7366 51.2989 54.2678 51.7678C53.7989 52.2366 53.163 52.5 52.5 52.5H7.5C6.83696 52.5 6.20107 52.2366 5.73223 51.7678C5.26339 51.2989 5 50.663 5 50V10C5 9.33696 5.26339 8.70107 5.73223 8.23223C6.20107 7.76339 6.83696 7.5 7.5 7.5ZM36.9825 24.4825L30.8575 30.6075L25.555 25.3025L14.9475 35.91L18.4825 39.445L25.555 32.375L30.8575 37.6775L40.5175 28.0175L45 32.5V20H32.5L36.9825 24.4825Z"/>
       </svg>`,
       label: "Interest",
-      value: `${Number.parseFloat(rate).toFixed(2)}% APR`,
+      // value: `${Number.parseFloat(rate).toFixed(2)}% APR`,
+      value: `${rate} APR`,
     },
     {
       svg: `
@@ -1089,7 +1098,7 @@ function generateGridItem(dataObj, selectMode) {
         <path d="M49.439 0c-1.301 0-3.213 1.733-3.989 2.483l-1.87 1.835c-.32.309-.744.479-1.206.479s-.888-.17-1.207-.478l-1.899-1.84C37.993 1.247 35.88 0 34.308 0c-1.574 0-3.687 1.247-4.962 2.479l-1.903 1.84c-.32.308-.751.478-1.215.478s-.895-.17-1.215-.479l-1.904-1.84C21.865 1.278 19.703 0 18.146 0s-3.72 1.277-4.963 2.479l-1.903 1.84c-.32.308-.752.478-1.216.478s-.896-.17-1.216-.479l-1.903-1.84C6.84 2.379 4.316 0 2.79 0 1.047 0 .384 2.361.384 4.384v51.232C.384 57.64 1.047 60 2.79 60c1.467 0 3.835-2.225 4.094-2.474l1.936-1.844c.32-.31.759-.48 1.226-.48s.902.17 1.223.481l1.908 1.838C14.421 58.723 16.584 60 18.143 60s3.721-1.277 4.965-2.479l1.904-1.84c.32-.308.752-.478 1.216-.478s.896.17 1.216.479l1.903 1.84C30.591 58.721 32.753 60 34.31 60c1.558 0 3.72-1.277 4.964-2.479l1.903-1.84c.32-.308.752-.478 1.216-.478s.895.17 1.215.479l1.904 1.84c.958.925 2.702 2.478 3.927 2.478 1.433 0 2.177-1.557 2.177-4.384V4.384C51.616 1.557 50.873 0 49.44 0m-9.055 45.069H27.78v-5.206h12.603zm0-12.603H11.89v-4.932h28.494zm0-12.329H11.89v-5.206h28.494z"/>
       </svg>`,
       label: "Minimum Monthly Payment",
-      value: `$${Number.parseFloat(minPayment).toFixed(2)}/month`,
+      value: `${minPayment}/month`,
     },
   ];
 
@@ -1140,9 +1149,9 @@ function updateGrid() {
     return;
   }
 
-  document.getElementById('column-configuration') 
-  ? document.getElementById('column-configuration').remove() 
-  : null;
+  document.getElementById("column-configuration")
+    ? document.getElementById("column-configuration").remove()
+    : null;
   elements.loanContainer.className = "grid";
 
   loanData.forEach((dataObj) => {
@@ -1343,6 +1352,14 @@ function updateLoanContainer() {
 
 function renderSelectableList() {
   elements.loanContainer.replaceChildren(); //Clear current UI elements
+  let headerFields = {
+    loanName: "Loan Name",
+    balance: "Balance",
+    rate: "Interest Rate",
+    minPayment: "Minimum Payment",
+    order: "Payment Order",
+    loanType: "Loan Type",
+  };
 
   // Remove any existing event listeners
   elements.loanContainer.removeEventListener("click", gridSelectDelegator);
@@ -1351,21 +1368,10 @@ function renderSelectableList() {
   let loanListContainer = document.createElement("table"); //parent table element
   loanListContainer.id = "loan-list";
 
-  const boilerplate = `
-      <tr id="header">
-        <th>Loan Name</th>
-        <th>Balance</th>
-        <th>Interest Rate</th>
-        <th>Minimum Payment</th>
-        <th>Payment Order</th>
-        <th>
-          <label class="checkbox-container">
-            <input type="checkbox" class="checkbox" id="select-all"></input>
-            <span class="checkmark"></span>
-          </label>
-        </th>
-      </tr>`;
-  loanListContainer.insertAdjacentHTML("afterbegin", boilerplate);
+  loanListContainer.insertAdjacentElement(
+    "afterbegin",
+    generateTableHeader(headerFields, true)
+  ); //make sure all list rendering functions are using formatted list item generation along with formatted list header generation.
 
   loanData.forEach((dataObj) =>
     loanListContainer.appendChild(generateListItem(dataObj, true))
