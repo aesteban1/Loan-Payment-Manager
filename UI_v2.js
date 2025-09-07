@@ -115,10 +115,6 @@ let selectHandler = () => {
 };
 
 function toolListeners() {
-  let filterHandler = () => {
-    //IMPLEMENT FILTER TOOL
-    console.log("filter tool clicked!");
-  };
 
   let duplicateHandler = () => {
     //IMPLEMENT DUPLICATE TOOL
@@ -141,9 +137,6 @@ function toolListeners() {
           selectHandler();
           target.className = "active-view";
         }
-        break;
-      case "filter-entries":
-        filterHandler();
         break;
       case "duplicate-entry":
         duplicateHandler();
@@ -272,6 +265,7 @@ function addToList(loanListContainer, dataObj) {
   //If an item is added with an initially empty table, build the table first
   if (!loanListContainer) {
     elements.loanContainer.replaceChildren();
+    addColumnConfig();
     loanListContainer = document.createElement("table"); //the table where the items will display
     loanListContainer.id = "loan-list";
     let headerFields = {
@@ -291,6 +285,7 @@ function addToList(loanListContainer, dataObj) {
   }
 
   loanListContainer.appendChild(generateListItem(dataObj));
+  loanListContainer.addEventListener("click", clickDelegator);
 
   modal.remove();
   elements.backdrop.style.visibility = "hidden";
@@ -343,15 +338,15 @@ function confirmEntry(identifier) {
     id: identifier,
     loanName: formData.get("loanName") || identifier,
     balance:
-      `$${Number.parseFloat(formData.get("loanBalance")).toFixed(2)}` || 0,
-    rate: `${Number.parseFloat(formData.get("loanRate")).toFixed(2)}%` || 0,
+      `$${Number.parseFloat(formData.get("loanBalance") || 0).toFixed(2)}`,
+    rate: `${Number.parseFloat(formData.get("loanRate") || 0).toFixed(2)}%`,
     minPayment:
-      `$${Number.parseFloat(formData.get("loanMin")).toFixed(2)}` || 0,
+      `$${Number.parseFloat(formData.get("loanMin") || 0).toFixed(2)}`,
     order: formData
       .get("Payment Order")
       .split(/[-\s]/)
       .filter((word) => word !== "Payments")
-      .join(" "),
+      .join("-"),
     loanType: formData.get("Loan Type"),
   };
 
@@ -398,7 +393,7 @@ function deleteEntry(identifier) {
     //closes confirm modal and disables backdrop
     document.getElementById("confirm-modal").style.visibility = "hidden";
     confirmModal.close();
-    if (modal.style.visibility !== "visible") {
+    if (!modal) {
       elements.backdrop.style.visibility = "hidden";
     }
     confirmModal.remove();
@@ -436,11 +431,11 @@ function updateEntry(event, dataObj) {
   UpdatedDataObj = {
     id: dataObj.id,
     loanName: formData.get("loanName") || dataObj.id,
-    balance: formData.get("loanBalance") || 0,
-    rate: formData.get("loanRate") || 0,
-    minPayment: formData.get("loanMin") || 0,
+    balance: `$${Number.parseFloat(formData.get("loanBalance") || 0).toFixed(2)}`,
+    rate: `${Number.parseFloat(formData.get("loanRate") || 0).toFixed(2)}%`,
+    minPayment: `$${Number.parseFloat(formData.get("loanMin") || 0).toFixed(2)}`,
     order: formData.get("Payment Order"),
-    loanType: formData.get("Loan Type") || "personal loan",
+    loanType: formData.get("Loan Type") || "Personal Loan",
   };
 
   updateLocalStorage(UpdatedDataObj);
@@ -524,7 +519,11 @@ function generateSelectMenu(menuName, stringArray, selected = null) {
 
   stringArray.forEach((string) => {
     let option = document.createElement("option");
-    option.value = string;
+    if(string.includes("Payments")){
+      option.value = string.split(" ").filter((i)=> i !== "Payments").join('-')
+    }else{
+      option.value = string
+    }
     option.textContent = string;
     if (selected && selected === string) {
       option.selected = true;
@@ -703,6 +702,9 @@ function openEditModal(identifier) {
     { key: "Loan Type", value: loanType },
   ];
   fields.forEach(({ key, value }) => {
+    if(key == "Payment Order"){
+      value = value.split(" ").join("-");
+    }
     let el = modal.querySelector(`[name="${key}"]`);
     el.value = value;
   });
@@ -724,14 +726,10 @@ function openEditModal(identifier) {
     let updatedDataObj = {
       id: identifier,
       loanName: formData.get("loanName") || identifier,
-      balance: Number.parseFloat(formData.get("loanBalance")).toFixed(2) || 0,
-      rate: Number.parseFloat(formData.get("loanRate")).toFixed(2) || 0,
-      minPayment: Number.parseFloat(formData.get("loanMin")).toFixed(2) || 0,
-      order: formData
-        .get("Payment Order")
-        .split(/[-\s]/)
-        .filter((word) => word !== "Payments")
-        .join(" "),
+      balance: Number.parseFloat(formData.get("loanBalance") || 0).toFixed(2),
+      rate: Number.parseFloat(formData.get("loanRate") || 0).toFixed(2),
+      minPayment: Number.parseFloat(formData.get("loanMin") || 0).toFixed(2),
+      order: formData.get("Payment Order"),
       loanType: formData.get("Loan Type"),
     };
 
@@ -745,6 +743,10 @@ let checkListener = (event) => {
   let target = event.target.closest("input[type=checkbox]");
 
   if (target && target.tagName === "INPUT") {
+    if(target.id === 'cc-loanName'){
+      target.checked = true;
+      return
+    }
     let key = target.id
       .split("-")
       .filter((i) => i !== "cc")
@@ -815,7 +817,6 @@ function generateTableHeader(headerFields, selectMode = false) {
   let thead = document.createElement("thead");
   let trElement = document.createElement("tr");
   trElement.id = "header";
-
   for (let [data, enabled] of columnMap) {
     if (enabled) {
       let thElement = document.createElement("th");

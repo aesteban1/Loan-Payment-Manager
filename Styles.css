@@ -26,7 +26,7 @@ h1 {
 #confirm-modal {
   height: 120px;
   width: 200px;
-  background-color: #505050;
+  background-color: #404040;
   color: #d4b6f9;
   text-shadow: 2px 3px 4px #121212;
   border: none;
@@ -41,11 +41,17 @@ h1 {
   text-align: center;
 }
 #confirm-modal button {
-  border: none;
-  height: 2rem;
-  width: 10ch;
-  border-radius: 5px;
   cursor: pointer;
+  color: #e9e9e9;
+  background-color: #2a2a2a;
+  outline: 1px solid rgba(160, 160, 160, 0.25);
+  font-weight: bold;
+  transition: all ease-in-out 0.1s;
+  border: none;
+  width: 10ch;
+  height: 2rem;
+  border-radius: 0.5rem;
+  margin: 0px 5px;
 }
 #confirm-modal #yes-btn:hover {
   color: #ffffff;
@@ -539,6 +545,9 @@ h1 {
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
+}
+.list .loan td:last-child {
+  width: 5%;
 }
 .list .loan > input {
   line-height: 1.5rem;
