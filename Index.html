@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Loan Payment Optimizer</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script defer src="Script.js"></script>
-    <script defer src="UI_v2.js"></script>
-    <link rel="stylesheet" href="Styles.css" />
+    <!-- <script type="module" src="Script.js"></script>
+    <script type="module" src="UI_v2.js"></script>
+    <script type="module" src="src/dateUtils.js"></script> -->
+    <script type="module", src="./src/main.js"></script>
+    <link rel="stylesheet" href="./Styles/Styles.css" />
   </head>
   <body>
     <h1>Loan Payment Manager</h1>
-    <!-- <form id="blank-modal" class="editable-modal"></form> -->
 
     <div id="overlay"></div>
     <section class="container" id="loan-table">
@@ -88,17 +89,6 @@
               </button>
             </li>
           </ul>
-          <!-- <ul>
-            <li>
-              <button id="column-config">
-                <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="1" width="5.75" height="23.75" rx="1" stroke="#A9A9A9" stroke-width="1" stroke-linecap="round" stroke-dasharray="2 2"/>
-                  <rect x="10" y="1" width="6" height="24" rx="1" fill="#A9A9A9"/>
-                  <rect x="19" y="1" width="6" height="24" rx="1" fill="#A9A9A9"/>
-                </svg>
-              </button>
-            </li>
-          </ul> -->
         </div>
         <div id="loan-container"></div>
       </div>

@@ -1,3 +1,5 @@
+import {toDisplayDate, toInputDate } from "../utils/dateUtils.js";
+
 const elements = {
   loanContainer: document.getElementById("loan-container"),
   backdrop: document.getElementById("overlay"),
@@ -348,6 +350,7 @@ function confirmEntry(identifier) {
       .filter((word) => word !== "Payments")
       .join("-"),
     loanType: formData.get("Loan Type"),
+    lastPayment: formData.get("lastPayment") || toInputDate(new Date(Date.now()))
   };
 
   updateLocalStorage(newDataObj);
@@ -436,6 +439,7 @@ function updateEntry(event, dataObj) {
     minPayment: `$${Number.parseFloat(formData.get("loanMin") || 0).toFixed(2)}`,
     order: formData.get("Payment Order"),
     loanType: formData.get("Loan Type") || "Personal Loan",
+    lastPayment: formData.get("Last Payment") || toInputDate(new Date(Date.now()))
   };
 
   updateLocalStorage(UpdatedDataObj);
@@ -537,6 +541,7 @@ function generateSelectMenu(menuName, stringArray, selected = null) {
 }
 
 function generateModalContent(heading, buttonOptions) {
+
   modal = document.createElement("form");
   modal.classList.add("editable-modal");
   modal.id = "blank-modal";
@@ -611,6 +616,23 @@ function generateModalContent(heading, buttonOptions) {
   minPaymentInput.name = "loanMin";
   divElement.appendChild(nameLabel);
   divElement.appendChild(minPaymentInput);
+  modal.appendChild(divElement);
+
+  let lastPaymentInput = document.createElement("input");
+  nameLabel = document.createElement("label");
+  divElement = document.createElement("div");
+  nameLabel.htmlFor = "lastPayment";
+  nameLabel.textContent = "Last Payment Date"
+  nameLabel.className = "inputLabel";
+  lastPaymentInput.dataset.cell = "last payment";
+  lastPaymentInput.type = "date";
+  lastPaymentInput.id = "lastPayment";
+  lastPaymentInput.placeholder = "Recent Payment Date";
+  lastPaymentInput.classList.add("loan-input", "date");
+  lastPaymentInput.name = "lastPayment";
+  lastPaymentInput.max = toInputDate(new Date(Date.now()));
+  divElement.appendChild(nameLabel);
+  divElement.appendChild(lastPaymentInput);
   modal.appendChild(divElement);
 
   let menuName = "Payment Order";
@@ -690,7 +712,7 @@ function openEditModal(identifier) {
   elements.backdrop.style.visibility = "visible";
 
   let dataObj = loanData.find((item) => item.id === identifier);
-  let { id, loanName, balance, rate, minPayment, order, loanType } = dataObj;
+  let { id, loanName, balance, rate, minPayment, order, loanType, lastPayment } = dataObj;
   //Populate the edit modal with the appropriate item data
 
   let fields = [
@@ -700,12 +722,16 @@ function openEditModal(identifier) {
     { key: "loanMin", value: minPayment },
     { key: "Payment Order", value: order },
     { key: "Loan Type", value: loanType },
+    {key: "lastPayment", value: lastPayment}
   ];
   fields.forEach(({ key, value }) => {
     if(key == "Payment Order"){
       value = value.split(" ").join("-");
     }
     let el = modal.querySelector(`[name="${key}"]`);
+    if(el.type === "number"){
+      value = value.replace(/[^\d.-]/g, "")
+    }
     el.value = value;
   });
 
@@ -731,6 +757,7 @@ function openEditModal(identifier) {
       minPayment: Number.parseFloat(formData.get("loanMin") || 0).toFixed(2),
       order: formData.get("Payment Order"),
       loanType: formData.get("Loan Type"),
+      lastPayment: formData.get("lastPayment")
     };
 
     updateLocalStorage(updatedDataObj);
@@ -1004,7 +1031,7 @@ function addColumnConfig(){
   if (columnMap.size === 0) {
     initColumnConfig.forEach(({ column, status }) => {
       document.getElementById(`cc-${column}`).checked = status;
-      key = column
+      let key = column
         .split("-")
         .filter((i) => i !== "cc")
         .toString();
