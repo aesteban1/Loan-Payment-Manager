@@ -6,6 +6,7 @@ const elements = {
   toolsContainer: document.getElementById("tools"),
   viewToggleContainer: document.getElementById("view-toggle"),
   tableToolbar: document.getElementById("table-toolbar"),
+  graphSection: document.getElementById("loanInfo")
 };
 let selectedItemsArray = null;
 let selectMode = false;
@@ -730,7 +731,7 @@ function openEditModal(identifier) {
     }
     let el = modal.querySelector(`[name="${key}"]`);
     if(el.type === "number"){
-      value = value.replace(/[^\d.-]/g, "")
+      value = value.replace(/[^\d.-]/g, "");
     }
     el.value = value;
   });
@@ -1458,9 +1459,30 @@ function renderSelectableList() {
   elements.tableToolbar.appendChild(ulElement);
 }
 
+export function graphOptions(){
+  const dropDownContainer = document.createElement("div");
+  dropDownContainer.className="go-container"
+
+  const dropDown = document.createElement("select");
+
+  const options = [{text:"weekly", value:52}, {text:"bi-weekly", value:26}, {text:"monthly", value:12}, {text:"bi-monthly", value:6}]
+
+  options.map((o)=>{
+    let option = document.createElement("option");
+    option.className="go-option";
+    option.value = o.value;
+    option.text = o.text;
+    dropDown.appendChild(option)
+  })
+
+  dropDownContainer.appendChild(dropDown);
+  elements.graphSection.appendChild(dropDownContainer);
+}
+
 window.addEventListener("DOMContentLoaded", (e) => {
   updateLoanContainer();
   viewListeners();
   toolListeners();
   newEntryListener();
+  graphOptions();
 });

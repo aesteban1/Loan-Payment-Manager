@@ -1,3 +1,6 @@
+import { toDisplayDate, toInputDate } from "../utils/dateUtils.js";
+
+
 let dateForm = document.getElementById('dateForm');
 
 let loans = []
@@ -5,102 +8,34 @@ let graphData = []
 let budget;
 const data = JSON.parse(localStorage.getItem('LPMdata')) || []
 
+let dataObj = data[0]
 
-//Helper Functions
-function setBudget(){
-  budget = document.getElementById("user-budget").value
+function dailyAccrual(apr, balance){
+  return (balance * (apr/365))/100
 }
 
-//unique date inputs
-function updateDateField(El){
-  let selectedDate = El.value
-  let target = El.parentElement.id.split('-')[1]
-  data.find(element => element.id === `group-${target}`).date = selectedDate
+function calculate(dataObj){
+  const name = dataObj.loanName;
+  const balance = Number.parseFloat(dataObj.balance.replace(/[^\d.-]/g, ""));
+  const rate = Number.parseFloat(dataObj.rate.replace(/[^\d.-]/g, ""));
+  const min = Number.parseFloat(dataObj.minPayment.replace(/[^\d.-]/g, ""));
+  const order = dataObj.order;
+  const type = dataObj.loanType;
+  const lastPayment = dataObj.lastPayment;
 }
 
-function daily_accrual(rate, balance){
-  return (rate/100)*(1/365)*balance
+function timeFrame(){
+ const timeFrames = document.getElementById("time-frames");
+
+ //The array of points needs to be generated based on the users time frame interval choice (weekly, bi-weekly, monthly, or bi-monthly payments).
+ //We will use a time frames DOM element to let the user choose an option and then call this function to read the choice and build the array
 }
 
-function rangeInDays(date1, date2){
-  let elapsedMS = date2.getTime()-date1.getTime()
-  return Math.round(elapsedMS/(1000*3600*24))-1
-}
+function graph(array, width, height){
+  const marginTop = 20;
+  const marginRight = 20;
+  const marginBottom = 20;
+  const marginLeft = 20;
 
-function rangeInWeeks(date1, date2){
-
-}
-
-function rangeInMonths(date1, date2){
 
 }
-
-///draw Chart function
-const chart = ()=> {
-  const width = 800;
-  const height = 500;
-  const marginTop = 50;
-  const marginRight = 30;
-  const marginBottom = 30;
-  const marginLeft = 40;
-
-  const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d=>d.balance)])
-        .range([height - marginBottom, marginTop])
-
-  const x = d3.scaleLinear()
-        .domain([0,36])
-        .range([marginLeft, width - marginRight])
-
-  let svg = d3.select("#graph")
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height);
-
-  svg.append("g")
-  .attr("transform", `translate(0,${height - marginBottom})`)
-  .call(d3.axisBottom(x).ticks(36));
-
-  svg.append("g")
-      .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).ticks(height/50))
-}
-
-
-//create data objects for the chart input
-function calculateTimeline(data, range=1){
-  
-  let d = data[0]
-
-  let p = new Date(Date.now())
-  let f = new Date(Date.now())
-  f.setFullYear(f.getFullYear()+range)
-
-  for(let i=0; i< 26;i++){
-    // console.log(new Date(f.setDate(f.getDate()+1)))
-    if(rangeInDays(p, f)){}
-  }
-  
-}
-
-//calculate daily accrual and payments
-
-//shared date input
-dateForm.addEventListener('submit', (e)=>{
-  e.preventDefault()
-
-  let date = document.getElementById('paymentDate').value
-  let userDate = new Date(date)
-  let today = new Date(Date.now())
-  let elapsedTime = rangeInDays(userDate, today)
-  data.forEach(element=>{
-    if(element.daysElapsed === null){
-      element.daysElapsed = elapsedTime
-    }
-  })
-  
-  date.value = ''
-})
-
-// chart()
-calculateTimeline(data)
